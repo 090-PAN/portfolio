@@ -32,6 +32,38 @@ canvas#scene.dragging{cursor:grabbing}
 #vignette{position:fixed;inset:0;pointer-events:none;z-index:6;background:radial-gradient(125% 105% at 50% 42%,rgba(255,255,255,0) 52%,rgba(24,46,84,.18) 88%,rgba(18,34,64,.3) 100%);mix-blend-mode:multiply}
 canvas#scene.pointing{cursor:pointer}
 
+/* ---------- v2：光标 / 氛围 / 章节 ---------- */
+#cursor{
+  position:fixed;left:0;top:0;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;
+  border:1.4px solid rgba(24,44,74,.45);z-index:60;pointer-events:none;opacity:0;
+  transition:width .24s cubic-bezier(.2,.8,.2,1),height .24s cubic-bezier(.2,.8,.2,1),
+             margin .24s cubic-bezier(.2,.8,.2,1),background .24s,border-color .24s,opacity .25s;
+}
+#cursor.on{opacity:1}
+#cursor.hot{width:46px;height:46px;margin:-23px 0 0 -23px;background:rgba(47,107,255,.13);border-color:rgba(47,107,255,.75)}
+@media (hover:hover) and (pointer:fine){
+  canvas#scene{cursor:none}
+}
+@media (max-width:820px){#cursor{display:none}}
+
+.hud-meta{left:30px;bottom:26px;display:flex;flex-direction:column;gap:5px;font-size:10px;letter-spacing:1.7px;
+  color:#41607f;opacity:.7;text-transform:uppercase;line-height:1.6}
+.hud-meta b{font-weight:600;color:#233c58;letter-spacing:1.4px}
+@media (max-width:640px){.hud-meta{display:none}}
+
+.idxline{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:8px;padding-right:34px}
+.idxline .eyebrow{margin:0}
+.idxline .idx{font-size:10px;letter-spacing:2.4px;color:#8d97a6;font-variant-numeric:tabular-nums}
+.panel-head .bar{position:absolute;left:26px;right:26px;bottom:-1px;height:2px;border-radius:2px;
+  background:rgba(20,40,80,.07);overflow:hidden}
+.panel-head .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f6bff,#8fb6ff);
+  transition:width .7s cubic-bezier(.2,.8,.2,1) .08s}
+body.panel-open #vignette{background:radial-gradient(120% 100% at 50% 46%,rgba(255,255,255,0) 46%,rgba(24,46,84,.24) 86%,rgba(14,28,54,.38) 100%)}
+
+.brand h1 span{display:inline-block;opacity:0;transform:translateY(10px);
+  animation:riseIn .9s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes riseIn{to{opacity:1;transform:none}}
+
 /* ---------- HUD ---------- */
 .hud{position:fixed;z-index:8;pointer-events:none;user-select:none}
 .hud-top{top:26px;left:30px;display:flex;flex-direction:column;gap:8px}
@@ -296,15 +328,21 @@ body.riding #labels{opacity:0}
 <body>
 <canvas id="scene"></canvas>
 <div id="vignette"></div>
+<div id="cursor"></div>
 <div id="labels"></div>
 
 <div class="hud hud-top">
-  <div class="brand"><h1>潘佳丽</h1><span class="en">PAN JIALI · PORTFOLIO</span></div>
+  <div class="brand"><h1 id="brandName">潘佳丽</h1><span class="en">PAN JIALI · PORTFOLIO</span></div>
   <div class="brand-sub"><span class="dot"></span><span>数据产品经理</span><span class="edu">· 广东外语外贸大学 管理科学与工程（在读）</span></div>
 </div>
 
 <div class="hud hud-right">
   <div class="pill" id="btnReset">🧭 回到全景</div>
+</div>
+
+<div class="hud hud-meta">
+  <span>LOCAL <b id="metaClock">--:--</b></span>
+  <span>V2.0 · 单文件 3D 作品集</span>
 </div>
 
 <div class="hud hint">拖拽旋转 · 滚轮缩放 · 点击小岛上的物件进入模块</div>
@@ -322,10 +360,11 @@ body.riding #labels{opacity:0}
 
 <aside class="panel" id="panel">
   <div class="panel-head">
-    <div class="eyebrow" id="pEyebrow"></div>
+    <div class="idxline"><div class="eyebrow" id="pEyebrow"></div><span class="idx" id="pIdx"></span></div>
     <h2 id="pTitle"></h2>
     <p id="pSub"></p>
     <button class="close" id="pClose">✕</button>
+    <div class="bar"><i id="pBar"></i></div>
   </div>
   <div class="panel-body" id="pBody"></div>
   <div class="foot-note" id="pFoot">潘佳丽 · 3D 个人小岛 · 拖拽可继续环视</div>
@@ -1195,6 +1234,62 @@ register('duck', duck, '彩蛋 · 骑鸭', 1.4, 1.2, { theta: 0.2, phi: 1.16, r:
 hotspots.forEach(h => h.base = h.root.position.y);
 
 
+/* --- v2 交互层：光标 / 视差 / 惯性 / 涟漪 --- */
+const cursorEl = document.getElementById('cursor');
+const cur = { x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2, on: false, overUI: false };
+addEventListener('pointermove', e => {
+  cur.tx = e.clientX; cur.ty = e.clientY;
+  if (!cur.on && e.pointerType === 'mouse') { cur.on = true; cursorEl.classList.add('on'); }
+  if (e.pointerType === 'mouse' && pointers.size === 0) {
+    par.tx = (e.clientX / innerWidth) * 2 - 1;
+    par.ty = (e.clientY / innerHeight) * 2 - 1;
+  }
+});
+addEventListener('pointerleave', () => { cur.on = false; cursorEl.classList.remove('on'); });
+document.addEventListener('pointerover', e => {
+  cur.overUI = !!e.target.closest('button,.pill,.tag,img,.xqp,input');
+});
+function tickCursor(dt) {
+  const k = 1 - Math.pow(0.0007, dt);
+  cur.x += (cur.tx - cur.x) * k;
+  cur.y += (cur.ty - cur.y) * k;
+  cursorEl.style.transform = `translate(${cur.x}px,${cur.y}px)`;
+  cursorEl.classList.toggle('hot', !!hoverId || cur.overUI);
+}
+
+// 相机鼠标视差
+const par = { x: 0, y: 0, tx: 0, ty: 0 };
+
+// 拖拽惯性
+let spinV = 0;
+
+// 水面涟漪 / 进入模块的地面光圈
+const clickRings = [];
+function spawnRipple(x, z, big) {
+  const g = new THREE.Mesh(new THREE.RingGeometry(0.82, 0.98, 44),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .5, side: THREE.DoubleSide, depthWrite: false }));
+  g.rotation.x = -Math.PI / 2; g.position.set(x, 0.13, z);
+  g.userData = { life: 0, dur: big ? 1.9 : 1.25 };
+  world.add(g); clickRings.push(g);
+}
+let focusRing = null;
+function pulseAt(x, z) {
+  if (focusRing) { world.remove(focusRing); focusRing.geometry.dispose(); focusRing.material.dispose(); }
+  const g = new THREE.Mesh(new THREE.RingGeometry(0.7, 1.0, 64),
+    new THREE.MeshBasicMaterial({ color: 0x2f6bff, transparent: true, opacity: .5, side: THREE.DoubleSide, depthWrite: false }));
+  g.rotation.x = -Math.PI / 2; g.position.set(x, 0.055, z);
+  g.userData = { life: 0 };
+  world.add(g); focusRing = g;
+}
+
+// 本地时间
+const metaClock = document.getElementById('metaClock');
+function tickClock() {
+  const d = new Date();
+  metaClock.textContent = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+}
+tickClock(); setInterval(tickClock, 20000);
+
 /* --- 相机控制 --- */
 const view = { theta: 0.48, phi: 0.98, r: 15.2 };
 const want = { theta: 0.48, phi: 0.98, r: 15.2 };
@@ -1209,7 +1304,7 @@ let pinchDist = 0, dragTotal = 0, lastPointer = null;
 canvas.addEventListener('pointerdown', e => {
   canvas.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (pointers.size === 1) { lastPointer = { x: e.clientX, y: e.clientY }; dragTotal = 0; canvas.classList.add('dragging'); }
+  if (pointers.size === 1) { lastPointer = { x: e.clientX, y: e.clientY }; dragTotal = 0; spinV = 0; canvas.classList.add('dragging'); }
   if (pointers.size === 2) {
     const [a, b] = [...pointers.values()];
     pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
@@ -1224,6 +1319,7 @@ canvas.addEventListener('pointermove', e => {
     const dx = e.clientX - lastPointer.x, dy = e.clientY - lastPointer.y;
     dragTotal += Math.abs(dx) + Math.abs(dy);
     want.theta -= dx * 0.0055;
+    spinV = -dx * 0.0055;
     want.phi = Math.min(1.42, Math.max(0.42, want.phi - dy * 0.0045));
     lastPointer = { x: e.clientX, y: e.clientY };
   } else if (pointers.size === 2) {
@@ -1240,6 +1336,7 @@ canvas.addEventListener('pointerup', e => {
   if (pointers.size === 0) canvas.classList.remove('dragging');
   pinchDist = 0;
   if (dragTotal < 8) pick(e);
+  else spinV = Math.max(-0.06, Math.min(0.06, spinV));
   lastPointer = null;
 });
 canvas.addEventListener('pointercancel', e => { pointers.delete(e.pointerId); canvas.classList.remove('dragging'); });
@@ -1277,6 +1374,14 @@ function hideAllTagsFocus() { hotspots.forEach(h => h.el.classList.remove('on'))
 
 function pick(e) {
   const p = pickAt(e);
+  ndc.x = (e.clientX / innerWidth) * 2 - 1;
+  ndc.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  const wh = raycaster.intersectObject(pondWater, false);
+  if (wh.length && (!p || p.module === 'duck')) {
+    spawnRipple(wh[0].point.x, wh[0].point.z, false);
+    tone(520, 0.16, 'sine', 0.04);
+  }
   if (!p) return;
   if (p.isKey) { playNote(p.note); pressKeyMesh(p.key); return; }
   if (p.isChess) { playClack(); nudge(p.piece); openPanel('hobbies', true); return; }
@@ -1354,6 +1459,14 @@ function openPanel(id, focus) {
   const meta = META[id];
   panel.classList.toggle('chat', id === 'ai');
   pEyebrow.textContent = meta.en;
+  const ORDER = ['about', 'experience', 'works', 'hobbies', 'footprints', 'contact', 'ai', 'duck'];
+  const oi = ORDER.indexOf(id) + 1;
+  const pIdx = document.getElementById('pIdx'), pBar = document.getElementById('pBar');
+  pIdx.textContent = String(oi).padStart(2, '0') + ' / 08';
+  pBar.style.width = '0%';
+  requestAnimationFrame(() => { pBar.style.width = (oi / 8 * 100).toFixed(1) + '%'; });
+  const hp = hotspots.find(x => x.id === id);
+  if (hp) pulseAt(hp.root.position.x, hp.root.position.z);
   pTitle.textContent = meta.title;
   pSub.textContent = meta.sub;
   pFoot.textContent = meta.foot;
@@ -1770,6 +1883,14 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape') { closePanel(); endRide(); }
   const map = { '1': 'about', '2': 'experience', '3': 'works', '4': 'hobbies', '5': 'footprints', '6': 'contact', '7': 'ai' };
   if (map[e.key]) openPanel(map[e.key]);
+  // 方向键也能转岛（面板关着时才接管）
+  if (!opened && !riding && e.key.startsWith('Arrow')) {
+    e.preventDefault();
+    if (e.key === 'ArrowLeft') want.theta -= 0.12;
+    if (e.key === 'ArrowRight') want.theta += 0.12;
+    if (e.key === 'ArrowUp') want.phi = Math.max(0.42, want.phi - 0.06);
+    if (e.key === 'ArrowDown') want.phi = Math.min(1.42, want.phi + 0.06);
+  }
 });
 
 /* --- AI 分身聊天（本地知识库） --- */
@@ -1883,6 +2004,15 @@ function updateCamera(dt) {
   }
   const k = 1 - Math.pow(0.0009, dt);
   want.phi = Math.min(1.44, Math.max(0.4, want.phi));
+  if (INTRO.on) {
+    if (!INTRO.start) INTRO.start = performance.now();
+    const u = Math.min(1, (performance.now() - INTRO.start) / 1000 / INTRO.dur), e = 1 - Math.pow(1 - u, 3);
+    want.theta = INTRO.s.theta + (INTRO.d.theta - INTRO.s.theta) * e;
+    want.phi = INTRO.s.phi + (INTRO.d.phi - INTRO.s.phi) * e;
+    want.r = INTRO.s.r + (INTRO.d.r - INTRO.s.r) * e;
+    if (u >= 1) INTRO.on = false;
+  }
+  if (Math.abs(spinV) > 0.0003) { want.theta += spinV; spinV *= Math.pow(0.93, dt * 60); }
   view.theta += (want.theta - view.theta) * k;
   view.phi += (want.phi - view.phi) * k;
   view.r += (want.r - view.r) * k;
@@ -1893,6 +2023,14 @@ function updateCamera(dt) {
     look.y + view.r * cp + 0.9,
     look.z + view.r * sp * Math.cos(view.theta)
   );
+  // 鼠标视差：镜头轻微横移，像手持拍摄
+  const pk = 1 - Math.pow(0.002, dt);
+  par.x += (par.tx - par.x) * pk;
+  par.y += (par.ty - par.y) * pk;
+  const amp = opened ? 0.32 : 0.78;
+  camera.position.x += Math.cos(view.theta) * par.x * amp;
+  camera.position.z -= Math.sin(view.theta) * par.x * amp;
+  camera.position.y += -par.y * amp * 0.6;
   camera.lookAt(look);
 }
 
@@ -1906,9 +2044,11 @@ function updateLabels() {
     const vis = wp.z < 1 && wp.x > -1.2 && wp.x < 1.2 && wp.y > -1.2 && wp.y < 1.2;
     hs.el.style.display = vis ? 'block' : 'none';
     if (vis) {
-      hs.el.style.left = ((wp.x + 1) / 2 * w) + 'px';
+      // 贴边时把标签拉回屏内，避免被裁掉
+      const lx = Math.min(w - 46, Math.max(46, (wp.x + 1) / 2 * w));
+      hs.el.style.left = lx + 'px';
       hs.el.style.top = ((-wp.y + 1) / 2 * h) + 'px';
-      live.push({ el: hs.el, x: (wp.x + 1) / 2 * w, y: (-wp.y + 1) / 2 * h });
+      live.push({ el: hs.el, x: lx, y: (-wp.y + 1) / 2 * h });
     }
   });
   // 窄屏标签容易叠在一起，做一次简单的下推避让
@@ -1963,6 +2103,21 @@ function animate() {
     rp.m.scale.setScalar(0.4 + u * 1.15);
     rp.m.material.opacity = Math.max(0, 0.34 * (1 - u));
   });
+  // 涟漪与光圈
+  for (let i = clickRings.length - 1; i >= 0; i--) {
+    const g = clickRings[i]; g.userData.life += dt;
+    const u = g.userData.life / g.userData.dur;
+    if (u >= 1) { world.remove(g); g.geometry.dispose(); g.material.dispose(); clickRings.splice(i, 1); continue; }
+    g.scale.setScalar(0.25 + u * 1.85);
+    g.material.opacity = 0.5 * (1 - u) * (1 - u);
+  }
+  if (focusRing) {
+    focusRing.userData.life += dt;
+    const u = focusRing.userData.life / 1.5;
+    if (u >= 1) { world.remove(focusRing); focusRing.geometry.dispose(); focusRing.material.dispose(); focusRing = null; }
+    else { focusRing.scale.setScalar(0.35 + u * 2.0); focusRing.material.opacity = 0.5 * (1 - u); }
+  }
+  tickCursor(dt);
   dust.rotation.y = t * 0.014;
   const du = t * 0.12;
   dust.position.y = Math.sin(du) * 0.22;
@@ -2021,14 +2176,24 @@ function applyViewport(reset) {
 window.addEventListener('resize', () => applyViewport(false));
 
 const PORTRAIT = applyViewport(true);
+/* 首屏：2.6 秒的镜头入场，从高处绕到正面 */
+want.r = PORTRAIT ? 27 : 20.5; want.theta = 0.55; want.phi = PORTRAIT ? 1.0 : 0.96;
+view.r = PORTRAIT ? 46 : 38; view.theta = -0.72; view.phi = PORTRAIT ? 0.74 : 0.68;
+const INTRO = { start: 0, dur: 2.6, on: true,
+  s: { theta: view.theta, phi: view.phi, r: view.r },
+  d: { theta: want.theta, phi: want.phi, r: want.r } };
+const bn = document.getElementById('brandName');
+if (bn) {
+  const chars = [...bn.textContent];
+  bn.innerHTML = chars.map((c, i) => `<span style="animation-delay:${0.15 + i * 0.09}s">${c}</span>`).join('');
+}
+
 /* 启动 */
 camera.position.set(14, 11, 16);
 animate();
 setTimeout(() => document.getElementById('loader').classList.add('hide'), 500);
 
-/* 首屏轻微推近 */
-want.r = PORTRAIT ? 27 : 20.5; want.theta = 0.55; want.phi = PORTRAIT ? 1.0 : 0.96;
-view.r = PORTRAIT ? 34 : 28; view.theta = 0.9; view.phi = PORTRAIT ? 1.1 : 1.14;
+
 </script>
 </body>
 </html>
