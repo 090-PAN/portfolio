@@ -193,9 +193,22 @@ body.riding #labels{opacity:0}
 .xqp.black{color:#26364b}
 .xqp.sel{box-shadow:0 0 0 3px #2f6bff,0 4px 10px rgba(30,60,120,.4)}
 .xqd{position:absolute;width:3.2%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:rgba(47,107,255,.55);box-shadow:0 0 0 3px rgba(47,107,255,.16);cursor:pointer}
+.xqd.cap{background:rgba(226,84,72,.62);box-shadow:0 0 0 3px rgba(226,84,72,.2)}
+.xqp.dim{opacity:.55}
 .xq-bar{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:11.5px;color:var(--ink-3);line-height:1.5}
 .xq-bar button{margin-left:auto;flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:11px;cursor:pointer;color:#3a4c63;font-family:inherit}
 .xq-bar button:hover{background:#f4f7ff;color:#1e4ed8}
+
+/* ---- 音乐 ---- */
+.music-bar{display:flex;align-items:center;gap:9px;margin-top:10px;flex-wrap:wrap}
+.play-btn{border:1px solid rgba(47,107,255,.35);background:#eef3ff;color:#1e4ed8;border-radius:999px;
+  padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit;transition:.18s;display:inline-flex;align-items:center;gap:6px}
+.play-btn:hover{background:#e2ecff}
+.play-btn.on{background:#2f6bff;color:#fff;border-color:#2f6bff}
+.music-hint{font-size:10.5px;color:var(--ink-3);line-height:1.5}
+.song-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.song{font-size:10.5px;padding:4px 9px;border-radius:999px;background:#f3f6fc;color:#46597a}
+.song i{font-style:normal;opacity:.55;margin-left:3px}
 
 /* ---- 爱好卡 ---- */
 .hobby-card{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px}
@@ -476,7 +489,7 @@ const CFG = {
     { icon: "♟", t: "象棋", d: "喜欢算步，也喜欢认输——棋盘上最诚实的反馈", photos: [], empty: "棋盘就是照片，不用摆拍" },
     { icon: "📷", t: "摄影", d: "从拍到被拍：给人拍过写真，也把寺庙的塔拍成自己的桌面", photos: [IMG.shooter, IMG.pagoda] },
     { icon: "⛰", t: "爬山", d: "武功山夜爬到顶，风大得站不稳，但日出值回票价", photos: [IMG.hike2, IMG.hike1] },
-    { icon: "🎧", t: "音乐", d: "孙燕姿、陶喆的歌单循环，写周报和处理数据时的背景音", photos: [], empty: "歌在耳机里，人就不出镜了" }
+        { icon: "🎧", t: "音乐", d: "孙燕姿、陶喆的歌单循环，写周报和处理数据时的背景音", songs: ["孙燕姿 · 遇见", "孙燕姿 · 逆光", "陶喆 · 爱很简单", "陶喆 · 普通朋友"] }
   ],
   hobbyNote: "照片都是手机里的原图；象棋和音乐没专门拍照，以后再换。",
 
@@ -755,7 +768,7 @@ signBoard.userData.noPick = false;
 
 /* --- 经历：书架 --- */
 const shelf = new THREE.Group();
-shelf.position.set(-4.15, 0, -0.2); shelf.rotation.y = -1.62;
+shelf.position.set(-4.75, 0, -0.55); shelf.rotation.y = 0.78;
 world.add(shelf);
 box(1.7, 2.3, 0.07, M(0x8c6244), 0, 1.15, -0.28, shelf);
 box(0.07, 2.3, 0.62, woodMat, -0.82, 1.15, 0, shelf);
@@ -832,23 +845,31 @@ const boardTop = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 1.56), new THREE.M
 boardTop.rotation.x = -Math.PI / 2; boardTop.position.set(0, 0.805, 0); boardTop.receiveShadow = true;
 chess.add(boardTop);
 const chessPieces = [];
-const chessLayout = [
-  [3, 0, 'black', '士'], [4, 0, 'black', '将'], [5, 0, 'black', '士'], [0, 3, 'black', '车'],
-  [4, 9, 'red', '帅'], [3, 8, 'red', '仕'], [5, 8, 'red', '仕'], [2, 7, 'red', '马'], [4, 6, 'red', '兵'], [6, 6, 'red', '兵']
-];
+const chessLayout = (() => {
+  const L = [];
+  const back = [['车',0],['马',1],['象',2],['士',3],['将',4],['士',5],['象',6],['马',7],['车',8]];
+  back.forEach(([n,cx]) => L.push([cx,0,'black',n]));
+  L.push([1,2,'black','炮'],[7,2,'black','炮']);
+  [0,2,4,6,8].forEach(cx => L.push([cx,3,'black','卒']));
+  const rback = [['车',0],['马',1],['相',2],['仕',3],['帅',4],['仕',5],['相',6],['马',7],['车',8]];
+  rback.forEach(([n,cx]) => L.push([cx,9,'red',n]));
+  L.push([1,7,'red','炮'],[7,7,'red','炮']);
+  [0,2,4,6,8].forEach(cx => L.push([cx,6,'red','兵']));
+  return L;
+})();
 const chessPieceBody = M(0xf7e3bd, { roughness: .7 });
 chessLayout.forEach(([cx, cy, side, name]) => {
   const g2 = new THREE.Group();
-  g2.position.set((cx - 4) * 0.155, 0.83, (cy - 4.5) * 0.168);
-  cyl(0.062, 0.062, 0.05, 16, chessPieceBody, 0, 0, 0, g2);
-  cyl(0.069, 0.069, 0.016, 16, side === 'red' ? M(0xd8453c, { roughness: .55 }) : M(0x2f3a4a, { roughness: .55 }), 0, 0.031, 0, g2);
+  g2.position.set((cx - 4) * 0.1585, 0.83, (cy - 4.5) * 0.1398);
+  cyl(0.056, 0.056, 0.05, 16, chessPieceBody, 0, 0, 0, g2);
+  cyl(0.062, 0.062, 0.016, 16, side === 'red' ? M(0xd8453c, { roughness: .55 }) : M(0x2f3a4a, { roughness: .55 }), 0, 0.031, 0, g2);
   const charTex = makeTex(96, 96, (g, w, h) => {
     g.fillStyle = side === 'red' ? '#a32d24' : '#1d2a3a';
     g.font = 'bold 62px "PingFang SC","Songti SC",serif';
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillText(name, 48, 52);
   });
-  const lbl = new THREE.Mesh(new THREE.PlaneGeometry(0.082, 0.082),
+  const lbl = new THREE.Mesh(new THREE.PlaneGeometry(0.076, 0.076),
     new THREE.MeshBasicMaterial({ map: charTex, transparent: true, depthWrite: false, alphaTest: .02 }));
   lbl.rotation.x = -Math.PI / 2; lbl.position.y = 0.049; lbl.renderOrder = 3; g2.add(lbl);
   const pd = { module: 'hobbies', isChess: true, piece: g2, home: { x: g2.position.x, z: g2.position.z }, name };
@@ -920,8 +941,8 @@ contactShadow(2.45, 2.6, 1.35, 1.05, .85);
 contactShadow(4.25, .15, 1.5, .8, .7);
 contactShadow(4.2, 3.45, .6, .6, .5);
 contactShadow(-5.0, -2.0, 1.9, 1.9, .55);
-contactShadow(-4.35, 2.85, 1.7, .85, .5);
-contactShadow(.55, 4.85, .6, .6, .5);
+contactShadow(-5.45, 1.6, 1.7, .85, .5);
+contactShadow(1.85, 5.05, .55, .55, .5);
 contactShadow(-1.35, 1.5, .6, .6, .45);
 
 const dustGeo = new THREE.BufferGeometry();
@@ -957,7 +978,7 @@ scene.add(sunGlow);
 
 /* --- 足迹：照片墙 --- */
 const wall = new THREE.Group();
-wall.position.set(-4.35, 0, 2.85); wall.rotation.y = -0.99;
+wall.position.set(-5.45, 0, 1.6); wall.rotation.y = -0.2;
 world.add(wall);
 box(0.1, 2.3, 0.1, woodDark, -1.2, 1.15, 0, wall);
 box(0.1, 2.3, 0.1, woodDark, 1.2, 1.15, 0, wall);
@@ -979,7 +1000,7 @@ for (let i = 0; i < 3; i++) box(0.05, 0.12, 0.05, M(0xc0873f), -0.78 + i * 0.78,
 
 /* --- 联系：邮筒 --- */
 const mail = new THREE.Group();
-mail.position.set(0.55, 0, 4.85);
+mail.position.set(1.85, 0, 5.05);
 world.add(mail);
 cyl(0.1, 0.12, 1.1, 10, woodDark, 0, 0.55, 0, mail);
 const mailBody = box(0.8, 0.62, 0.55, M(0xf0644e), 0, 1.42, 0, mail);
@@ -1064,7 +1085,7 @@ function tree(x, z, s = 1, c = 0x4fae7a) {
   const c2 = new THREE.Mesh(new THREE.ConeGeometry(0.62, 1.2, 7), M(c)); c2.position.y = 2.3; c2.castShadow = true; g.add(c2);
   world.add(g);
 }
-tree(-6.0, 1.1, 1.0, 0x56b98a);
+tree(-6.15, -1.15, 1.0, 0x56b98a);
 tree(-2.2, -4.6, 0.9, 0x4aa877);
 tree(2.4, -4.9, 1.15, 0x62c08f);
 tree(5.6, 3.9, 0.95, 0x4fae7a);
@@ -1160,13 +1181,13 @@ function register(id, root, label, y, ringR, view, module) {
 }
 
 register('about', hut, '关于我', 3.9, 2.6, { theta: 0.08, phi: 0.98, r: 13.0, ty: 2.0 });
-register('experience', shelf, '经历', 2.5, 1.4, { theta: -1.35, phi: 1.02, r: 9.6, ty: 1.3 });
+register('experience', shelf, '经历', 2.5, 1.4, { theta: 0.8, phi: 1.02, r: 8.8, ty: 1.35 });
 register('works', board, '作品', 2.6, 1.5, { theta: 1.3, phi: 1.02, r: 9.4, ty: 1.4 });
 register('hobbies', chess, '爱好 · 象棋', 1.5, 1.7, { theta: 0.7, phi: 1.02, r: 9.0, ty: 0.8 });
 register('photo', photo, '爱好 · 摄影', 2.2, 1.0, { theta: 0.88, phi: 1.04, r: 7.4, ty: 1.3 }, 'hobbies');
 register('hill', hill, '爱好 · 爬山', 2.6, 1.4, { theta: 1.95, phi: 1.05, r: 9.2, ty: 0.9 }, 'hobbies');
-register('footprints', wall, '足迹', 2.6, 1.6, { theta: -0.92, phi: 1.02, r: 9.0, ty: 1.2 });
-register('contact', mail, '联系方式', 1.9, 1.0, { theta: 0.12, phi: 1.06, r: 7.8, ty: 1.1 });
+register('footprints', wall, '足迹', 2.6, 1.6, { theta: -0.2, phi: 1.02, r: 8.2, ty: 1.2 });
+register('contact', mail, '联系方式', 1.9, 1.0, { theta: 0.36, phi: 1.06, r: 7.4, ty: 1.1 });
 register('ai', avatar, 'AI 分身', 3.0, 1.0, { theta: 0.06, phi: 1.06, r: 7.2, ty: 1.25 });
 register('duck', duck, '彩蛋 · 骑鸭', 1.4, 1.2, { theta: 0.2, phi: 1.16, r: 6.0, ty: 0.4 });
 
@@ -1180,7 +1201,7 @@ const want = { theta: 0.48, phi: 0.98, r: 15.2 };
 const look = new THREE.Vector3(0, 2.35, 0);
 const lookWant = new THREE.Vector3(0, 2.35, 0);
 let playing = false;
-const R = { min: 5.2, max: 34 };
+const R = { min: 5.2, max: 46 };
 
 const pointers = new Map();
 let pinchDist = 0, dragTotal = 0, lastPointer = null;
@@ -1282,6 +1303,18 @@ function tone(freq, dur = 0.2, type = 'sine', vol = 0.1) {
 }
 function playNote(f) { tone(f, 0.26, 'triangle', 0.11); }
 function playClack() { tone(760, 0.07, 'square', 0.07); setTimeout(() => tone(380, 0.09, 'triangle', 0.05), 40); }
+// 音乐：浏览器合成的 4 小节循环（不是原曲，只当氛围音）
+const MUSIC_BARS = [[261.6, 329.6, 392, 329.6], [220, 261.6, 329.6, 261.6], [174.6, 261.6, 349.2, 261.6], [196, 246.9, 392, 246.9]];
+let musicTimer = null, musicIdx = 0;
+function musicStep() {
+  const bar = MUSIC_BARS[Math.floor(musicIdx / 4) % 4];
+  const f = bar[musicIdx % 4];
+  tone(f, 0.6, 'triangle', 0.05);
+  if (musicIdx % 4 === 0) tone(f * 0.5, 0.8, 'sine', 0.035);
+  musicIdx++;
+}
+function stopMusic() { if (musicTimer) { clearInterval(musicTimer); musicTimer = null; } }
+function toggleMusic() { if (musicTimer) { stopMusic(); return false; } ac(); musicStep(); musicTimer = setInterval(musicStep, 340); return true; }
 const nudging = [];
 function nudge(m) { nudging.push({ m, t: 0, x: m.position.x, y: m.position.y, z: m.position.z }); }
 function quack() {
@@ -1340,6 +1373,7 @@ function openPanel(id, focus) {
 
 }
 function closePanel() {
+  stopMusic();
   panel.classList.remove('open'); document.body.classList.remove('panel-open'); opened = null;
   document.querySelectorAll('#dock button').forEach(b => b.classList.remove('active'));
 }
@@ -1479,12 +1513,15 @@ const RENDER = {
           <div class="hicon">${h.icon}</div>
           <div style="flex:1">
             <b>${h.t}</b><span>${h.d}</span>
-            ${h.photos && h.photos.length ? `<div class="strip" style="grid-template-columns:${h.photos.length > 1 ? '1fr 1fr' : '1fr'}">${h.photos.map((p, k) => `<figure><img class="zoom" src="${p}" alt="${h.t}" loading="lazy"><figcaption>${h.t} · 0${k + 1}</figcaption></figure>`).join('')}</div>` : `<div class="photo-slot">${h.empty || '照片位 · 暂时没放'}</div>`}
+            ${h.songs ? `<div class="music-bar"><button class="play-btn" id="musicBtn">▶ 试听一段</button><span class="music-hint" id="musicHint">浏览器合成的短循环，不是原曲</span></div>
+              <div class="song-list">${h.songs.map(x => `<span class="song">${x}</span>`).join('')}</div>`
+              : h.photos && h.photos.length ? `<div class="strip" style="grid-template-columns:${h.photos.length > 1 ? '1fr 1fr' : '1fr'}">${h.photos.map((p, k) => `<figure><img class="zoom" src="${p}" alt="${h.t}" loading="lazy"><figcaption>${h.t} · 0${k + 1}</figcaption></figure>`).join('')}</div>` : `<div class="photo-slot">${h.empty || '照片位 · 暂时没放'}</div>`}
           </div>
         </div>`).join('')}
       <div class="dashed">${CFG.hobbyNote}</div>
     `;
     bindChess();
+    bindMusic();
   },
 
   footprints() {
@@ -1551,35 +1588,82 @@ function bindChess() {
   const piecesEl = document.getElementById('xqPieces');
   const tip = document.getElementById('xqTip');
   if (!piecesEl) return;
-  const start = [
-    { x: 4, y: 9, side: 'red', n: '帅' }, { x: 3, y: 8, side: 'red', n: '仕' }, { x: 5, y: 8, side: 'red', n: '仕' },
-    { x: 2, y: 7, side: 'red', n: '马' }, { x: 4, y: 6, side: 'red', n: '兵' }, { x: 6, y: 6, side: 'red', n: '兵' },
-    { x: 3, y: 0, side: 'black', n: '士' }, { x: 4, y: 0, side: 'black', n: '将' }, { x: 5, y: 0, side: 'black', n: '士' },
-    { x: 0, y: 3, side: 'black', n: '车' }
-  ];
-  let pieces = start.map(p => ({ ...p }));
-  let sel = null, moves = 0;
-  const cell = (cx, cy) => ({ left: ((cx + 0.5) / 9) * 100 + '%', top: ((cy + 0.5) / 10) * 100 + '%' });
-  const at = (x, y) => pieces.find(q => q.x === x && q.y === y);
 
-  function legal(p) {
+  function opening() {
+    const r = [];
+    const back = ['车', '马', '相', '仕', '帅', '仕', '相', '马', '车'];
+    back.forEach((n, x) => r.push({ x, y: 9, side: 'red', n }));
+    const bback = ['车', '马', '象', '士', '将', '士', '象', '马', '车'];
+    bback.forEach((n, x) => r.push({ x, y: 0, side: 'black', n }));
+    [1, 7].forEach(x => { r.push({ x, y: 7, side: 'red', n: '炮' }); r.push({ x, y: 2, side: 'black', n: '炮' }); });
+    [0, 2, 4, 6, 8].forEach(x => { r.push({ x, y: 6, side: 'red', n: '兵' }); r.push({ x, y: 3, side: 'black', n: '卒' }); });
+    return r;
+  }
+
+  let pieces = opening(), sel = null, moves = 0, over = false;
+  const cell = (cx, cy) => ({ left: ((cx + 0.5) / 9) * 100 + '%', top: ((cy + 0.5) / 10) * 100 + '%' });
+  const inside = (x, y) => x >= 0 && x <= 8 && y >= 0 && y <= 9;
+  const at = (x, y) => pieces.find(q => q.x === x && q.y === y);
+  const inPalace = (side, x, y) => x >= 3 && x <= 5 && (side === 'red' ? y >= 7 : y <= 2);
+
+  function movesOf(p) {
     const out = [];
-    const free = (x, y) => x >= 0 && x <= 8 && y >= 0 && y <= 9 && !at(x, y);
-    if (p.n === '马') {
+    const add = (x, y) => {
+      if (!inside(x, y)) return false;
+      const q = at(x, y);
+      if (!q) { out.push({ x, y, cap: false }); return true; }
+      if (q.side !== p.side) out.push({ x, y, cap: true });
+      return false;
+    };
+    const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    if (p.n === '车') {
+      dirs.forEach(([dx, dy]) => { let x = p.x + dx, y = p.y + dy; while (add(x, y)) { x += dx; y += dy; } });
+    } else if (p.n === '炮') {
+      dirs.forEach(([dx, dy]) => {
+        let x = p.x + dx, y = p.y + dy, screen = false;
+        while (inside(x, y)) {
+          const q = at(x, y);
+          if (!screen) {
+            if (!q) out.push({ x, y, cap: false });
+            else screen = true;
+          } else if (q) {
+            if (q.side !== p.side) out.push({ x, y, cap: true });
+            break;
+          }
+          x += dx; y += dy;
+        }
+      });
+    } else if (p.n === '马' || p.n === '馬') {
       [[1, -2], [2, -1], [2, 1], [1, 2], [-1, 2], [-2, 1], [-2, -1], [-1, -2]].forEach(([dx, dy]) => {
-        const lx = dx === 2 ? 1 : dx === -2 ? -1 : 0, ly = dy === 2 ? 1 : dy === -2 ? -1 : 0;
-        if (at(p.x + lx, p.y + ly)) return;
-        if (free(p.x + dx, p.y + dy)) out.push([p.x + dx, p.y + dy]);
+        const lx = dx === 2 ? 1 : dx === -2 ? -1 : 0;
+        const ly = dy === 2 ? 1 : dy === -2 ? -1 : 0;
+        if (at(p.x + lx, p.y + ly)) return;          // 蹩马腿
+        add(p.x + dx, p.y + dy);
       });
-    } else if (p.n === '兵') {
-      if (free(p.x, p.y - 1)) out.push([p.x, p.y - 1]);
-    } else if (p.n === '帅' || p.n === '将') {
-      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+    } else if (p.n === '相' || p.n === '象') {
+      [[2, 2], [2, -2], [-2, 2], [-2, -2]].forEach(([dx, dy]) => {
+        const ex = p.x + dx / 2, ey = p.y + dy / 2;
+        if (at(ex, ey)) return;                       // 塞象眼
+        const ny = p.y + dy;
+        if (p.side === 'red' && ny < 5) return;       // 不过河
+        if (p.side === 'black' && ny > 4) return;
+        add(p.x + dx, ny);
+      });
+    } else if (p.n === '仕' || p.n === '士') {
+      [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([dx, dy]) => {
         const nx = p.x + dx, ny = p.y + dy;
-        if (nx >= 3 && nx <= 5 && ny >= 7 && ny <= 9 && free(nx, ny)) out.push([nx, ny]);
+        if (inPalace(p.side, nx, ny)) add(nx, ny);
       });
-    } else {
-      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { if (free(p.x + dx, p.y + dy)) out.push([p.x + dx, p.y + dy]); });
+    } else if (p.n === '帅' || p.n === '将') {
+      dirs.forEach(([dx, dy]) => {
+        const nx = p.x + dx, ny = p.y + dy;
+        if (inPalace(p.side, nx, ny)) add(nx, ny);
+      });
+    } else { // 兵 / 卒
+      const fw = p.side === 'red' ? -1 : 1;
+      add(p.x, p.y + fw);
+      const crossed = p.side === 'red' ? p.y <= 4 : p.y >= 5;
+      if (crossed) { add(p.x - 1, p.y); add(p.x + 1, p.y); }
     }
     return out;
   }
@@ -1593,36 +1677,69 @@ function bindChess() {
       const c = cell(p.x, p.y);
       b.style.left = c.left; b.style.top = c.top;
       if (sel === idx) b.classList.add('sel');
+      else if (sel !== null && pieces[sel] && pieces[sel].side === p.side) b.classList.add('dim');
       b.onclick = () => {
-        if (p.side !== 'red') { tip.textContent = '黑方只是摆着看，红方随便你走'; return; }
+        if (over) return;
+        if (p.side !== 'red') { tip.textContent = '黑方是对手，点红棋走子，蓝色圆点就是落点'; return; }
         sel = (sel === idx) ? null : idx;
         if (sel !== null) {
-          const ms = legal(p);
-          tip.textContent = `${p.n} 可以走 ${ms.length} 个位置` + (p.n === '马' ? '（马走日）' : p.n === '兵' ? '（兵只能向前一步）' : '（九宫内一格）');
+          const ms = movesOf(p);
+          tip.textContent = ms.length ? `${p.n} 可落 ${ms.length} 处` + (ms.some(m => m.cap) ? '（含吃子）' : '') : `${p.n} 现在被堵死了`;
         }
         draw();
       };
       piecesEl.appendChild(b);
     });
-    if (sel !== null && pieces[sel]) {
-      legal(pieces[sel]).forEach(([x, y]) => {
+    if (sel !== null && pieces[sel] && !over) {
+      movesOf(pieces[sel]).forEach(mv => {
         const d = document.createElement('div');
-        d.className = 'xqd';
-        const c = cell(x, y);
+        d.className = 'xqd' + (mv.cap ? ' cap' : '');
+        const c = cell(mv.x, mv.y);
         d.style.left = c.left; d.style.top = c.top;
-        d.onclick = (e) => {
+        d.onclick = e => {
           e.stopPropagation();
-          pieces[sel].x = x; pieces[sel].y = y; moves++;
-          sel = null; playClack();
-          tip.textContent = `第 ${moves} 步。棋盘上最诚实的反馈，是走错了立刻看得见。`;
+          const mover = pieces[sel];
+          const target = at(mv.x, mv.y);
+          if (target) {
+            pieces = pieces.filter(q => q !== target);
+            if (target.n === '将' || target.n === '帅') {
+              over = true;
+              mover.x = mv.x; mover.y = mv.y;
+              sel = null; playClack();
+              tip.textContent = '吃掉了对方的将，重摆再开一局';
+              draw(); return;
+            }
+          }
+          mover.x = mv.x; mover.y = mv.y;
+          moves++; sel = null; playClack();
+          tip.textContent = `第 ${moves} 步。马走日、炮翻山、车走直线——规则都在，慢慢下。`;
           draw();
         };
         piecesEl.appendChild(d);
       });
     }
   }
-  document.getElementById('xqReset').onclick = () => { pieces = start.map(p => ({ ...p })); sel = null; moves = 0; tip.textContent = '先点一枚红棋试试'; draw(); };
+
+  const resetBtn = document.getElementById('xqReset');
+  if (resetBtn) resetBtn.onclick = () => {
+    pieces = opening(); sel = null; moves = 0; over = false;
+    tip.textContent = '已回到开局：红方在下，黑方在上';
+    draw();
+  };
   draw();
+}
+
+/* --- 音乐试听 --- */
+function bindMusic() {
+  const btn = document.getElementById('musicBtn');
+  if (!btn) return;
+  btn.onclick = () => {
+    const on = toggleMusic();
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '❚❚ 暂停' : '▶ 试听一段';
+    const hint = document.getElementById('musicHint');
+    if (hint) hint.textContent = on ? '播放中 · 浏览器合成的短循环，不是原曲' : '浏览器合成的短循环，不是原曲';
+  };
 }
 
 /* --- 图片灯箱 --- */
@@ -1781,6 +1898,7 @@ function updateCamera(dt) {
 
 function updateLabels() {
   const w = window.innerWidth, h = window.innerHeight;
+  const live = [];
   hotspots.forEach(hs => {
     const wp = hs.root.getWorldPosition(tmpV);
     wp.y += hs.anchorY;
@@ -1790,8 +1908,23 @@ function updateLabels() {
     if (vis) {
       hs.el.style.left = ((wp.x + 1) / 2 * w) + 'px';
       hs.el.style.top = ((-wp.y + 1) / 2 * h) + 'px';
+      live.push({ el: hs.el, x: (wp.x + 1) / 2 * w, y: (-wp.y + 1) / 2 * h });
     }
   });
+  // 窄屏标签容易叠在一起，做一次简单的下推避让
+  for (let i = 0; i < live.length; i++) {
+    const a = live[i], ra = a.el.getBoundingClientRect();
+    if (!ra.width) continue;
+    for (let j = i + 1; j < live.length; j++) {
+      const b = live[j], rb = b.el.getBoundingClientRect();
+      if (!rb.width) continue;
+      if (ra.left < rb.right + 4 && rb.left < ra.right + 4 && ra.top < rb.bottom + 4 && rb.top < ra.bottom + 4) {
+        b.y += (ra.bottom - rb.top) + 6;
+        b.el.style.top = b.y + 'px';
+        ra.height += 0; // 首项位置不动，只推后者
+      }
+    }
+  }
 }
 
 function animate() {
@@ -1876,11 +2009,11 @@ function applyViewport(reset) {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   if (reset) {
-    const base = portrait ? 43 : 15.2;
+    const base = portrait ? 27 : 15.2;
     want.r = view.r = base;
     want.phi = view.phi = portrait ? 1.0 : 0.98;
     want.theta = view.theta = portrait ? 0.36 : 0.48;
-    lookWant.set(portrait ? -0.35 : 0, portrait ? 1.5 : 2.35, 0);
+    lookWant.set(portrait ? -0.1 : 0, portrait ? 1.9 : 2.35, 0);
     look.copy(lookWant);
   }
   return portrait;
@@ -1894,8 +2027,8 @@ animate();
 setTimeout(() => document.getElementById('loader').classList.add('hide'), 500);
 
 /* 首屏轻微推近 */
-want.r = 20.5; want.theta = 0.55; want.phi = 0.96;
-view.r = 28; view.theta = 0.9; view.phi = 1.14;
+want.r = PORTRAIT ? 27 : 20.5; want.theta = 0.55; want.phi = PORTRAIT ? 1.0 : 0.96;
+view.r = PORTRAIT ? 34 : 28; view.theta = 0.9; view.phi = PORTRAIT ? 1.1 : 1.14;
 </script>
 </body>
 </html>
