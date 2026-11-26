@@ -83,6 +83,25 @@ body.panel-open #vignette{background:radial-gradient(120% 100% at 50% 46%,rgba(2
 .hud-right .pill{cursor:pointer;transition:transform .2s ease, background .2s}
 .hud-right .pill:hover{transform:translateY(-1px);background:rgba(255,255,255,.82)}
 
+#soundBtn.on{background:rgba(47,107,255,.12);color:#1e4ed8;border-color:rgba(47,107,255,.28)}
+.toast{position:fixed;left:50%;bottom:120px;transform:translate(-50%,12px);z-index:14;
+  background:rgba(19,30,46,.86);color:#fff;font-size:12px;letter-spacing:.4px;padding:9px 16px;border-radius:999px;
+  opacity:0;pointer-events:none;transition:opacity .35s, transform .35s;backdrop-filter:blur(10px);white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.mail-card input,.mail-card textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;
+  font-family:inherit;font-size:12.5px;color:var(--ink);background:#fff;margin-top:8px;resize:vertical;outline:none}
+.mail-card textarea{min-height:86px;line-height:1.65}
+.mail-card input:focus,.mail-card textarea:focus{border-color:rgba(47,107,255,.45);box-shadow:0 0 0 3px rgba(47,107,255,.09)}
+.mail-bar{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.mail-bar .primary,.mail-bar .ghost{border-radius:999px;padding:7px 14px;font-size:12px;font-family:inherit;cursor:pointer;transition:.18s}
+.mail-bar .primary{border:0;background:#2f6bff;color:#fff}
+.mail-bar .primary:hover{background:#1e4ed8}
+.mail-bar .ghost{border:1px solid var(--line);background:#fff;color:#3a4c63}
+.mail-bar span{font-size:11px;color:var(--ink-3)}
+.song-list a.song{text-decoration:none;color:#3d5271;display:inline-flex;align-items:center;gap:3px}
+.song-list a.song:hover{color:#1e4ed8;border-color:rgba(47,107,255,.3)}
+@media (max-width:640px){.toast{bottom:104px;font-size:11px}}
+
 /* ---------- dock ---------- */
 .dock{
   left:50%;bottom:24px;transform:translateX(-50%);
@@ -337,8 +356,10 @@ body.riding #labels{opacity:0}
 </div>
 
 <div class="hud hud-right">
+  <div class="pill on" id="soundBtn">🔊 音乐</div>
   <div class="pill" id="btnReset">🧭 回到全景</div>
 </div>
+<div class="toast" id="soundTip">点一下页面，小岛的音乐就响起来了</div>
 
 <div class="hud hud-meta">
   <span>LOCAL <b id="metaClock">--:--</b></span>
@@ -528,7 +549,11 @@ const CFG = {
     { icon: "♟", t: "象棋", d: "喜欢算步，也喜欢认输——棋盘上最诚实的反馈", photos: [], empty: "棋盘就是照片，不用摆拍" },
     { icon: "📷", t: "摄影", d: "从拍到被拍：给人拍过写真，也把寺庙的塔拍成自己的桌面", photos: [IMG.shooter, IMG.pagoda] },
     { icon: "⛰", t: "爬山", d: "武功山夜爬到顶，风大得站不稳，但日出值回票价", photos: [IMG.hike2, IMG.hike1] },
-        { icon: "🎧", t: "音乐", d: "孙燕姿、陶喆的歌单循环，写周报和处理数据时的背景音", songs: ["孙燕姿 · 遇见", "孙燕姿 · 逆光", "陶喆 · 爱很简单", "陶喆 · 普通朋友"] }
+        { icon: "🎧", t: "音乐", d: "孙燕姿、陶喆的歌，写周报和刷数据时的背景音。小岛自带一段合成的循环音（右上角可关），想听原曲就点下面的歌单", links: [
+          { t: "孙燕姿 · 网易云歌手页", u: "https://music.163.com/#/artist?id=9272" },
+          { t: "陶喆 · 网易云歌手页", u: "https://music.163.com/#/artist?id=5196" },
+          { t: "孙燕姿《天黑黑》", u: "https://music.163.com/#/song?id=1366289604" }
+        ] }
   ],
   hobbyNote: "照片都是手机里的原图；象棋和音乐没专门拍照，以后再换。",
 
@@ -656,7 +681,21 @@ function photoTexture(src, caption, cw = 260, ch = 310, capSize = 24) {
 const world = new THREE.Group();
 scene.add(world);
 
-const grassMat = M(0x74c473, { flatShading: false });
+const grassTex = makeTex(512, 512, (g, w, h) => {
+  g.fillStyle = '#74c473'; g.fillRect(0, 0, w, h);
+  for (let i = 0; i < 6; i++) {
+    g.fillStyle = i % 2 ? 'rgba(255,255,255,.035)' : 'rgba(30,90,40,.045)';
+    g.fillRect(0, i * h / 6, w, h / 12);
+  }
+  for (let i = 0; i < 2600; i++) {
+    const x = Math.random() * w, y = Math.random() * h, r = 0.6 + Math.random() * 1.6;
+    g.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,.05)' : 'rgba(40,110,55,.07)';
+    g.beginPath(); g.arc(x, y, r, 0, 6.3); g.fill();
+  }
+});
+grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping;
+grassTex.repeat.set(3, 3);
+const grassMat = M(0x74c473, { flatShading: false, map: grassTex });
 const grassSideMat = M(0x5aa463);
 const rockMat = M(0xbe9877);
 const rockDarkMat = M(0x977057);
@@ -1161,6 +1200,96 @@ for (let i = 0; i < 26; i++) {
   sphere(0.055, M(flowerColors[i % 4]), x, 0.09, z, world, 6);
 }
 
+/* --- 细节：草丛 / 睡莲 / 池边石 / 灯柱 / 长凳 / 蝴蝶 --- */
+const tuftMat = M(0x67b377);
+const tufts = [];
+for (let i = 0; i < 46; i++) {
+  const a = Math.random() * Math.PI * 2, r = 1.5 + Math.random() * 5.4;
+  const x = Math.cos(a) * r, z = Math.sin(a) * r;
+  if (x > -2.5 && x < 2.5 && z > -3.6 && z < 0.7) continue;             // 小屋
+  if (Math.hypot(x + 2.85, z - 3.95) < 2.15) continue;                   // 水塘
+  if (Math.hypot(x - 2.45, z - 2.6) < 1.35) continue;                    // 象棋桌
+  if (Math.hypot(x - 4.25, z - 3.45) < 1.0) continue;                    // 三脚架
+  const g = new THREE.Group(); g.position.set(x, 0, z);
+  for (let k = 0; k < 3; k++) {
+    const b = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.13 + Math.random() * 0.08, 5), tuftMat);
+    b.position.set((Math.random() - .5) * .17, 0.07, (Math.random() - .5) * .17);
+    b.rotation.z = (Math.random() - .5) * .4; b.castShadow = true; g.add(b);
+  }
+  world.add(g); tufts.push(g);
+}
+
+/* 水面：睡莲 + 池边石 */
+const padMat = M(0x69b96f);
+for (let i = 0; i < 6; i++) {
+  const a = i * 1.05 + 0.4, r = 0.6 + (i % 3) * 0.4;
+  const piece = new THREE.Mesh(new THREE.CircleGeometry(0.19 + (i % 2) * 0.06, 12), padMat);
+  piece.rotation.x = -Math.PI / 2; piece.position.set(pondC.x + Math.cos(a) * r, 0.115, pondC.y + Math.sin(a) * r);
+  piece.receiveShadow = true; world.add(piece);
+  if (i % 3 === 1) {
+    const bud = sphere(0.05, M(0xffb7c5), pondC.x + Math.cos(a) * r, 0.15, pondC.y + Math.sin(a) * r, world, 8);
+    bud.castShadow = false;
+  }
+}
+for (let i = 0; i < 14; i++) {
+  const a = i / 14 * Math.PI * 2 + 0.25;
+  const rr = 2.06 + Math.random() * 0.12;
+  const st = new THREE.Mesh(new THREE.IcosahedronGeometry(0.13 + Math.random() * 0.1, 0), M(0xd9cdb8));
+  st.position.set(pondC.x + Math.cos(a) * rr, 0.11, pondC.y + Math.sin(a) * rr);
+  st.rotation.set(Math.random(), Math.random(), Math.random()); st.castShadow = true; world.add(st);
+}
+
+/* 两盆门口绿植 */
+function potted(x, z, s2 = 1) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.scale.setScalar(s2); world.add(g);
+  const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.14, 0.26, 10), M(0xd08a63));
+  p1.position.y = 0.13; p1.castShadow = true; g.add(p1);
+  cyl(0.19, 0.19, 0.03, 10, M(0x6a4a35), 0, 0.26, 0, g);
+  [[0, 0.5, 0, 0.16], [0.16, 0.44, 0.06, 0.12], [-0.14, 0.46, -0.05, 0.12]].forEach(([dx, y, dz, r]) => {
+    const leaf = sphere(r, M(0x5fb37a), dx, y, dz, g, 8);
+    leaf.scale.y = 1.5; leaf.castShadow = true;
+  });
+}
+potted(2.55, 0.55, 1);
+potted(-0.35, 2.25, 0.85);
+
+/* 水塘边的小木凳 */
+const pondBench = new THREE.Group(); pondBench.position.set(-1.25, 0, 5.45); pondBench.rotation.y = -0.25; world.add(pondBench);
+box(1.15, 0.09, 0.36, woodMat, 0, 0.42, 0, pondBench);
+box(1.15, 0.28, 0.06, woodMat, 0, 0.66, -0.16, pondBench);
+for (const [dx, dz] of [[-.46, -.14], [.46, -.14], [-.46, .14], [.46, .14]]) box(0.07, 0.42, 0.07, woodDark, dx, 0.21, dz, pondBench);
+
+/* 屋顶：屋脊 + 烟囱 + 小雨檐 */
+const chimney = box(0.34, 0.72, 0.34, M(0xc8a58c), 1.15, 3.55, -0.55, hut);
+box(0.4, 0.07, 0.4, M(0x8e6a55), 1.15, 3.93, -0.55, hut);
+
+/* 工作室侧墙的小窗 */
+[[-2.11, -0.65], [2.11, 0.45]].forEach(([wx, wz]) => {
+  const frame = box(0.06, 0.86, 0.86, M(0xe8cdae), wx, 1.62, wz, hut);
+  const glass = box(0.02, 0.70, 0.70, new THREE.MeshStandardMaterial({ color: 0xcfe6ff, roughness: .25, metalness: .3, transparent: true, opacity: .75 }), wx + (wx < 0 ? -0.03 : 0.03), 1.62, wz, hut);
+  box(0.02, 0.70, 0.035, M(0xd9bb99), wx + (wx < 0 ? -0.04 : 0.04), 1.62, wz, hut);
+});
+
+/* 门口踏步石 */
+box(1.1, 0.08, 0.5, M(0xe6dcc9), 0, 0.05, 2.0, hut);
+
+/* 蝴蝶 */
+const butterflies = [];
+function butterfly(x, y, z, c) {
+  const g = new THREE.Group(); g.position.set(x, y, z); g.scale.setScalar(0.9);
+  const wingMat = M(c, { side: THREE.DoubleSide, emissive: c, emissiveIntensity: .12 });
+  const wl = new THREE.Mesh(new THREE.PlaneGeometry(0.19, 0.15), wingMat);
+  wl.position.x = -0.09; g.add(wl);
+  const wr = new THREE.Mesh(new THREE.PlaneGeometry(0.19, 0.15), wingMat);
+  wr.position.x = 0.09; g.add(wr);
+  const body = cyl(0.012, 0.012, 0.14, 6, M(0x3a3340), 0, 0, 0, g);
+  body.rotation.x = Math.PI / 2;
+  world.add(g); butterflies.push({ g, wl, wr, ph: Math.random() * 6.28, r: 2.2 + Math.random() * 2.6, y: y + Math.random() * .4, sp: 0.35 + Math.random() * .25 });
+}
+butterfly(1.6, 1.1, 1.2, 0xffd6e2);
+butterfly(-2.2, 1.6, 2.2, 0xfff0b8);
+butterfly(3.6, 1.9, 1.3, 0xdfeaff);
+
 /* --- 云 --- */
 const clouds = [];
 function cloud(x, y, z, s) {
@@ -1420,6 +1549,41 @@ function musicStep() {
 }
 function stopMusic() { if (musicTimer) { clearInterval(musicTimer); musicTimer = null; } }
 function toggleMusic() { if (musicTimer) { stopMusic(); return false; } ac(); musicStep(); musicTimer = setInterval(musicStep, 340); return true; }
+/* 全局氛围音：进站就开，浏览器要求一次点击才出声 */
+let ambOn = false;
+const soundBtn = document.getElementById('soundBtn');
+const soundTip = document.getElementById('soundTip');
+function syncSoundUI() {
+  if (!soundBtn) return;
+  soundBtn.classList.toggle('on', ambOn);
+  soundBtn.textContent = ambOn ? '🔊 音乐' : '🔇 已静音';
+}
+function ensureTimer() {
+  if (!musicTimer) { musicStep(); musicTimer = setInterval(musicStep, 340); }
+}
+function startAmbient() {
+  ac(); ensureTimer();
+  ambOn = true; syncSoundUI();
+  if (soundTip) soundTip.classList.remove('on');
+}
+function stopAmbient() {
+  stopMusic(); ambOn = false; syncSoundUI();
+  if (soundTip) soundTip.classList.add('on');
+}
+function kickAudio() {
+  const ctx = ac(); if (!ctx) return;
+  const go = () => { if (ambOn) ensureTimer(); };
+  if (ctx.state === 'running') go();
+  else ctx.resume().then(go).catch(() => {});
+}
+['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev =>
+  addEventListener(ev, kickAudio, { passive: true })
+);
+if (soundBtn) soundBtn.onclick = () => { musicTimer ? stopAmbient() : startAmbient(); };
+ambOn = true; syncSoundUI(); kickAudio();
+setTimeout(() => { if (soundTip && !(actx && actx.state === 'running')) soundTip.classList.add('on'); }, 1600);
+setTimeout(() => { if (soundTip) soundTip.classList.remove('on'); }, 9000);
+
 const nudging = [];
 function nudge(m) { nudging.push({ m, t: 0, x: m.position.x, y: m.position.y, z: m.position.z }); }
 function quack() {
@@ -1486,7 +1650,6 @@ function openPanel(id, focus) {
 
 }
 function closePanel() {
-  stopMusic();
   panel.classList.remove('open'); document.body.classList.remove('panel-open'); opened = null;
   document.querySelectorAll('#dock button').forEach(b => b.classList.remove('active'));
 }
@@ -1611,14 +1774,14 @@ const RENDER = {
     pBody.innerHTML = `
       <div class="card" style="padding-bottom:14px">
         <h3>棋盘直接下，走法我帮你算</h3>
-        <p style="margin-top:4px">点一枚红棋，蓝色圆点就是它能落的位置（马走日、蹩马腿这些都按规则算好了）。</p>
+        <p style="margin-top:4px">红先黑后，两边都能走：点当前该走的一方棋子，蓝色圆点就是它能落的位置（马走日、蹩马腿这些都按规则算好了）。</p>
         <div class="xq-wrap">
           <div class="xq" id="xqBoard">
             <div class="xq-grid"></div>
             <div class="xq-river"><span>楚 河</span><span>汉 界</span></div>
             <div class="xq-pieces" id="xqPieces"></div>
           </div>
-          <div class="xq-bar"><span id="xqTip">先点一枚红棋试试</span><button id="xqReset">重摆</button></div>
+          <div class="xq-bar"><span id="xqTip">红先黑后，先点一枚红棋试试</span><button id="xqReset">重摆</button></div>
         </div>
       </div>
       ${CFG.hobbies.map(h => `
@@ -1626,15 +1789,14 @@ const RENDER = {
           <div class="hicon">${h.icon}</div>
           <div style="flex:1">
             <b>${h.t}</b><span>${h.d}</span>
-            ${h.songs ? `<div class="music-bar"><button class="play-btn" id="musicBtn">▶ 试听一段</button><span class="music-hint" id="musicHint">浏览器合成的短循环，不是原曲</span></div>
-              <div class="song-list">${h.songs.map(x => `<span class="song">${x}</span>`).join('')}</div>`
+            ${h.links ? `<div class="music-bar"><span class="music-hint">歌单跳到网易云官方页（新标签打开）</span></div>
+              <div class="song-list">${h.links.map(x => `<a class="song" href="${x.u}" target="_blank" rel="noopener">${x.t} ↗</a>`).join('')}</div>`
               : h.photos && h.photos.length ? `<div class="strip" style="grid-template-columns:${h.photos.length > 1 ? '1fr 1fr' : '1fr'}">${h.photos.map((p, k) => `<figure><img class="zoom" src="${p}" alt="${h.t}" loading="lazy"><figcaption>${h.t} · 0${k + 1}</figcaption></figure>`).join('')}</div>` : `<div class="photo-slot">${h.empty || '照片位 · 暂时没放'}</div>`}
           </div>
         </div>`).join('')}
       <div class="dashed">${CFG.hobbyNote}</div>
     `;
     bindChess();
-    bindMusic();
   },
 
   footprints() {
@@ -1670,6 +1832,17 @@ const RENDER = {
           <button class="copy" data-v="${c.v}">复制</button>
         </div>`).join('')}
       <div class="dashed" style="margin-top:6px">邮箱、电话、GitHub 都是真实账号，点「复制」就能直接粘贴给面试官。</div>
+      <div class="card mail-card">
+        <h3>往信箱里投一张纸条</h3>
+        <p style="margin-top:4px">想说什么都可以写在这儿。这个站是纯静态的，没有服务器：点「投进信箱」会用你电脑上的邮件客户端把信发到她的邮箱（也可以先复制，自己微信发）。</p>
+        <input id="mailFrom" maxlength="20" placeholder="怎么称呼你（可留空）" />
+        <textarea id="mailBodyInput" maxlength="500" placeholder="想对潘佳丽说的话…"></textarea>
+        <div class="mail-bar">
+          <button class="primary" id="mailSend">✉️ 投进信箱</button>
+          <button class="ghost" id="mailCopy">复制内容</button>
+          <span id="mailTip"></span>
+        </div>
+      </div>
       <div class="sec-title">To Recruiters</div>
       <div class="card"><p style="margin-top:0">如果只能记一句话：<br /><strong>做过 4 段实习、拿过国赛一等、有 2 项已授权专利，想从「交结论」走到「做产品」。</strong></p></div>
     `;
@@ -1678,6 +1851,7 @@ const RENDER = {
         try { await navigator.clipboard.writeText(b.dataset.v); b.textContent = '已复制'; setTimeout(() => b.textContent = '复制', 1200); } catch (e) { }
       };
     });
+    bindMail();
   },
 
   ai() {
@@ -1713,7 +1887,7 @@ function bindChess() {
     return r;
   }
 
-  let pieces = opening(), sel = null, moves = 0, over = false;
+  let pieces = opening(), sel = null, moves = 0, over = false, turn = 'red';
   const cell = (cx, cy) => ({ left: ((cx + 0.5) / 9) * 100 + '%', top: ((cy + 0.5) / 10) * 100 + '%' });
   const inside = (x, y) => x >= 0 && x <= 8 && y >= 0 && y <= 9;
   const at = (x, y) => pieces.find(q => q.x === x && q.y === y);
@@ -1793,7 +1967,7 @@ function bindChess() {
       else if (sel !== null && pieces[sel] && pieces[sel].side === p.side) b.classList.add('dim');
       b.onclick = () => {
         if (over) return;
-        if (p.side !== 'red') { tip.textContent = '黑方是对手，点红棋走子，蓝色圆点就是落点'; return; }
+        if (p.side !== turn) { tip.textContent = `现在轮到${turn === 'red' ? '红方' : '黑方'}走，点${turn === 'red' ? '红' : '黑'}棋子`; return; }
         sel = (sel === idx) ? null : idx;
         if (sel !== null) {
           const ms = movesOf(p);
@@ -1819,13 +1993,14 @@ function bindChess() {
               over = true;
               mover.x = mv.x; mover.y = mv.y;
               sel = null; playClack();
-              tip.textContent = '吃掉了对方的将，重摆再开一局';
+              tip.textContent = `${mover.side === 'red' ? '红方' : '黑方'}吃掉了对方的${target.n}，重摆再开一局`;
               draw(); return;
             }
           }
           mover.x = mv.x; mover.y = mv.y;
           moves++; sel = null; playClack();
-          tip.textContent = `第 ${moves} 步。马走日、炮翻山、车走直线——规则都在，慢慢下。`;
+          turn = turn === 'red' ? 'black' : 'red';
+          tip.textContent = `第 ${moves} 步走完，轮到${turn === 'red' ? '红方' : '黑方'}了`;
           draw();
         };
         piecesEl.appendChild(d);
@@ -1835,23 +2010,57 @@ function bindChess() {
 
   const resetBtn = document.getElementById('xqReset');
   if (resetBtn) resetBtn.onclick = () => {
-    pieces = opening(); sel = null; moves = 0; over = false;
-    tip.textContent = '已回到开局：红方在下，黑方在上';
+    pieces = opening(); sel = null; moves = 0; over = false; turn = 'red';
+    tip.textContent = '已回到开局：红方在下，黑方在上，红先黑后';
     draw();
   };
   draw();
 }
 
-/* --- 音乐试听 --- */
-function bindMusic() {
-  const btn = document.getElementById('musicBtn');
-  if (!btn) return;
-  btn.onclick = () => {
-    const on = toggleMusic();
-    btn.classList.toggle('on', on);
-    btn.textContent = on ? '❚❚ 暂停' : '▶ 试听一段';
-    const hint = document.getElementById('musicHint');
-    if (hint) hint.textContent = on ? '播放中 · 浏览器合成的短循环，不是原曲' : '浏览器合成的短循环，不是原曲';
+/* --- 信箱留言 --- */
+const letterFx = [];
+function flyLetter() {
+  const g = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.19),
+    new THREE.MeshStandardMaterial({ color: 0xfffdf6, roughness: .95, side: THREE.DoubleSide, transparent: true, opacity: 1 }));
+  g.position.set(mail.position.x + 0.15, 1.95, mail.position.z + 0.5);
+  g.rotation.set(-0.3, 0.3, 0.1);
+  world.add(g); letterFx.push({ g, t: 0 });
+  tone(880, 0.18, 'sine', 0.05);
+}
+function bindMail() {
+  const fromEl = document.getElementById('mailFrom');
+  const bodyEl = document.getElementById('mailBodyInput');
+  const tip = document.getElementById('mailTip');
+  const sendBtn = document.getElementById('mailSend');
+  const copyBtn = document.getElementById('mailCopy');
+  if (!fromEl || !sendBtn) return;
+  try {
+    const draft = JSON.parse(localStorage.getItem('pj_mail') || 'null');
+    if (draft) { fromEl.value = draft.from || ''; bodyEl.value = draft.body || ''; }
+  } catch (e) { }
+  const compose = () => {
+    const f = (fromEl.value || '').trim(), b = (bodyEl.value || '').trim();
+    const subj = '小岛信箱 · 来自' + (f || '一位访客');
+    const body = (f ? f + ' 写道：\n\n' : '') + b;
+    return { subj, body, f, b };
+  };
+  sendBtn.onclick = () => {
+    const c = compose();
+    if (!c.b) { tip.textContent = '还没写呢，写一句再投吧'; tip.style.color = '#c2413a'; return; }
+    try { localStorage.setItem('pj_mail', JSON.stringify({ from: c.f, body: c.b, at: Date.now() })); } catch (e) { }
+    flyLetter();
+    tip.style.color = '#2ea36d';
+    tip.textContent = '信已经塞进邮筒，邮件客户端里点发送就好';
+    const href = 'mailto:2292100161@qq.com?subject=' + encodeURIComponent(c.subj) + '&body=' + encodeURIComponent(c.body);
+    setTimeout(() => { try { location.href = href; } catch (e) { } }, 260);
+  };
+  copyBtn.onclick = async () => {
+    const c = compose();
+    if (!c.b) { tip.textContent = '先写点内容再复制'; tip.style.color = '#c2413a'; return; }
+    try {
+      await navigator.clipboard.writeText(c.body);
+      tip.style.color = '#2ea36d'; tip.textContent = '已复制，去微信 / 邮件里粘贴就行';
+    } catch (e) { tip.textContent = '复制失败，手动选中吧'; }
   };
 }
 
@@ -1961,11 +2170,25 @@ function reply(q) {
 function escapeHtml(s) { return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function resetChatState() { chatStarted = false; }
 
-/* --- 骑鸭彩蛋 --- */
-let riding = false, rideT = 0;
+/* --- 骑鸭彩蛋：鸭子带你一站一站逛岛 --- */
+let riding = false, rideT = 0, rideI = 0, rideMove = 0, rideDwell = 0, ridePhase = 'move';
+const RIDE_STOPS = [
+  { n: '工作室 · 关于我', x: 0.2, z: 1.0, theta: 0.40, phi: 0.98, r: 11.5, ty: 1.9 },
+  { n: '书架 · 经历', x: -3.9, z: 0.3, theta: 0.92, phi: 0.98, r: 7.6, ty: 1.7 },
+  { n: '照片墙 · 足迹', x: -4.6, z: 2.3, theta: -0.18, phi: 1.00, r: 7.4, ty: 1.5 },
+  { n: '水塘 · 大黄鸭的老家', x: -2.85, z: 3.95, theta: 0.22, phi: 1.06, r: 7.2, ty: 1.0 },
+  { n: '邮筒 · 联系方式', x: 1.85, z: 5.05, theta: 0.34, phi: 1.02, r: 6.6, ty: 1.2 },
+  { n: '展示板 · 作品', x: 3.35, z: 1.15, theta: 1.52, phi: 1.00, r: 7.6, ty: 1.5 },
+  { n: '象棋桌 · 爱好', x: 2.45, z: 2.6, theta: 0.72, phi: 1.02, r: 7.2, ty: 1.1 },
+  { n: '三脚架 · 摄影', x: 4.2, z: 3.45, theta: 1.06, phi: 1.02, r: 6.8, ty: 1.4 },
+  { n: '小山 · 爬山', x: 5.3, z: 2.7, theta: 1.9, phi: 1.02, r: 8.6, ty: 1.2 }
+];
+const RIDE_MOVE_T = 3.1, RIDE_DWELL_T = 2.1;
+const easeIO = u => u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
 const rideEl = document.getElementById('ride');
+const rideText = rideEl ? rideEl.querySelector('span') : null;
 function startRide() {
-  riding = true; rideT = 0;
+  riding = true; rideT = 0; rideI = 0; rideMove = 0; rideDwell = 0; ridePhase = 'move';
   quack();
   rideEl.classList.add('on'); document.body.classList.add('riding');
   hotspots.forEach(h => h.el.classList.remove('on'));
@@ -1975,6 +2198,9 @@ function endRide() {
   if (!riding) return;
   riding = false;
   rideEl.classList.remove('on'); document.body.classList.remove('riding');
+  duck.position.set(duckPos.x, duckPos.y, duckPos.z);
+  duck.rotation.set(0, 0, 0);
+  duck.scale.setScalar(1);
   want.theta = 0.55; want.phi = 0.96; want.r = 20.5;
   lookWant.set(0, 2.35, 0);
 }
@@ -1988,18 +2214,33 @@ const camPos = new THREE.Vector3();
 function updateCamera(dt) {
   avatar.userData.bubble.visible = !riding;
   if (riding) {
-    const da = rideT * 0.42;
-    duck.position.x = pondC.x + Math.sin(da) * 0.6;
-    duck.position.z = pondC.y + Math.cos(da) * 0.6;
-    const camAng = -0.62 + Math.sin(rideT * 0.35) * 0.12;
+    rideT += dt;
+    const a = 0.9 + rideT * 0.115;          // 绕岛的角速度
+    const R0 = 5.6;
+    const dx = -Math.sin(a), dz = -Math.cos(a);   // 前进方向（切向）
+    duck.position.set(Math.cos(a) * R0, 2.25 + Math.sin(rideT * 2.1) * 0.1, Math.sin(a) * R0);
+    duck.rotation.y = Math.atan2(dx, dz);
+    duck.rotation.z = Math.sin(rideT * 1.5) * 0.05;
+    if (duck.scale.x > 0.71) duck.scale.setScalar(0.7);
+    // 镜头在鸭子侧后方，往前看（鸭子偏左下，不挡岛）
+    const ahead = 1.8, lx2 = -dz, lz2 = dx;
     camPos.set(
-      pondC.x + Math.sin(camAng) * 8.0,
-      4.4 + Math.sin(rideT * 1.4) * 0.18,
-      pondC.y + Math.cos(camAng) * 8.0
+      duck.position.x - dx * 7.6 + lx2 * 2.3,
+      duck.position.y + 4.5,
+      duck.position.z - dz * 7.6 + lz2 * 2.3
     );
-    camera.position.lerp(camPos, 1 - Math.pow(0.002, dt));
-    look.lerp(tmpV.set(duck.position.x, duck.position.y + 0.5, duck.position.z), 1 - Math.pow(0.002, dt));
+    camera.position.lerp(camPos, 1 - Math.pow(0.0015, dt));
+    lookWant.set(duck.position.x + dx * ahead, 1.5, duck.position.z + dz * ahead);
+    look.lerp(lookWant, 1 - Math.pow(0.0015, dt));
     camera.lookAt(look);
+    if (rideText) {
+      let near = null, nd = 99;
+      RIDE_STOPS.forEach(st => {
+        const d = Math.hypot(duck.position.x - st.x, duck.position.z - st.z);
+        if (d < nd) { nd = d; near = st; }
+      });
+      rideText.textContent = nd < 2.1 ? `🦆 经过 · ${near.n}` : '🦆 鸭子带着你环岛飞一圈';
+    }
     return;
   }
   const k = 1 - Math.pow(0.0009, dt);
@@ -2117,7 +2358,23 @@ function animate() {
     if (u >= 1) { world.remove(focusRing); focusRing.geometry.dispose(); focusRing.material.dispose(); focusRing = null; }
     else { focusRing.scale.setScalar(0.35 + u * 2.0); focusRing.material.opacity = 0.5 * (1 - u); }
   }
+  for (let i = letterFx.length - 1; i >= 0; i--) {
+    const L = letterFx[i]; L.t += dt;
+    const u = L.t / 1.5;
+    if (u >= 1) { world.remove(L.g); L.g.geometry.dispose(); L.g.material.dispose(); letterFx.splice(i, 1); continue; }
+    L.g.position.y = 1.95 + Math.sin(u * Math.PI) * 0.9;
+    L.g.position.z = mail.position.z + 0.5 - u * 0.55;
+    L.g.rotation.z = 0.1 + u * 0.5;
+    L.g.material.opacity = 1 - Math.pow(u, 2.2);
+  }
   tickCursor(dt);
+  butterflies.forEach(b => {
+    const a = t * b.sp + b.ph;
+    b.g.position.set(Math.cos(a) * b.r, b.y + Math.sin(a * 2.2) * 0.12, Math.sin(a) * b.r * 0.72 + 1.6);
+    b.g.rotation.y = -a + 1.4;
+    const flap = Math.sin(t * 9 + b.ph) * 0.75;
+    b.wl.rotation.y = flap; b.wr.rotation.y = -flap;
+  });
   dust.rotation.y = t * 0.014;
   const du = t * 0.12;
   dust.position.y = Math.sin(du) * 0.22;
