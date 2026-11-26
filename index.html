@@ -124,13 +124,16 @@ body.panel-open #vignette{background:radial-gradient(120% 100% at 50% 46%,rgba(2
 .dock button .ico{display:inline-flex;width:15px;height:15px;opacity:.85}
 .dock button .ico svg{width:15px;height:15px}
 .dock button.active .ico{opacity:1}
+.dock button .lbl{display:inline-block;transition:opacity .18s, max-width .3s}
+body.panel-open .dock button .lbl{max-width:0;opacity:0;overflow:hidden}
+body.panel-open .dock button{padding:8px 11px}
 .dock button:hover{background:rgba(47,107,255,.1);color:#1e4ed8}
 .dock button.active{background:#1b2a40;color:#fff}
 .hint{left:50%;bottom:78px;transform:translateX(-50%);font-size:11px;color:#496581;letter-spacing:.6px;opacity:.85;white-space:nowrap}
 @media (max-width:640px){.hint{display:none}}
 @media (min-width:761px){
   .dock{transition:transform .5s cubic-bezier(.22,.9,.25,1)}
-  body.panel-open .dock{transform:translateX(calc(-50% - clamp(215px,22vw,330px)))}
+  body.panel-open .dock{transform:translateX(calc(-50% - clamp(260px,30vw,600px)))}
   body.panel-open .hint{opacity:0}
   body.panel-open .hud-meta{opacity:0}
 }
@@ -156,7 +159,7 @@ body.riding #labels{opacity:0}
 
 /* ---------- panel ---------- */
 .panel{
-  position:fixed;top:0;right:0;height:100%;width:clamp(430px,44vw,660px);z-index:20;
+  position:fixed;top:0;right:0;height:100%;width:clamp(520px,60vw,1200px);z-index:20;
   display:flex;flex-direction:column;
   background:rgba(255,252,247,.93);
   backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
@@ -339,6 +342,18 @@ body.riding #labels{opacity:0}
 #ride.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 #ride button{border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;border-radius:999px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit}
 
+/* 宽屏（面板 >= 780px 内容区） */
+@media (min-width:1180px){
+  .cardgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+  .cardgrid .card{margin-bottom:0;display:flex;flex-direction:column}
+  .tabpane.on.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:stretch}
+  .tabpane.on.g2>.card{margin-bottom:0}
+  .tabpane.on.g2>.card.wide{grid-column:1/-1}
+  .stat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  #tab-honor .strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+.xq{max-width:620px;margin:12px auto 0}
+
 /* ---------- responsive ---------- */
 @media (max-width:760px){
   .hud-top{top:16px;left:16px}
@@ -381,20 +396,20 @@ body.riding #labels{opacity:0}
 
 <div class="hud hud-meta">
   <span>LOCAL <b id="metaClock">--:--</b></span>
-  <span>V2.2 · 单文件 3D 作品集</span>
+  <span>V2.3 · 单文件 3D 作品集</span>
 </div>
 
 <div class="hud hint">拖拽旋转 · 滚轮缩放 · 点击小岛上的物件进入模块</div>
 
 <div class="hud dock" id="dock">
-  <button data-go="about"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>关于</button>
-  <button data-go="experience"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg></span>经历</button>
-  <button data-go="works"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg></span>作品</button>
-  <button data-go="hobbies"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M16.5 18c1-2 2.5-5 2.5-9a7 7 0 0 0-7-7H6.635a1 1 0 0 0-.768 1.64L7 5l-2.32 5.802a2 2 0 0 0 .95 2.526l2.87 1.456"/></svg></span>爱好</button>
-  <button data-go="footprints"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></svg></span>足迹</button>
-  <button data-go="contact"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/></svg></span>联系</button>
-  <button data-go="ai"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span>AI 分身</button>
-  <button data-go="duck"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/></svg></span>彩蛋</button>
+  <button data-go="about"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="lbl">关于</span></button>
+  <button data-go="experience"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0 0 22 17V5a2 2 0 0 0-1.999-2L16 3.002A5 5 0 0 0 12 5a5 5 0 0 0-4-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 1.999 2H8a5 5 0 0 1 4 2 5 5 0 0 1 4-2z"/></svg></span><span class="lbl">经历</span></button>
+  <button data-go="works"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg></span><span class="lbl">作品</span></button>
+  <button data-go="hobbies"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1z"/><path d="M16.5 18c1-2 2.5-5 2.5-9a7 7 0 0 0-7-7H6.635a1 1 0 0 0-.768 1.64L7 5l-2.32 5.802a2 2 0 0 0 .95 2.526l2.87 1.456"/></svg></span><span class="lbl">爱好</span></button>
+  <button data-go="footprints"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></svg></span><span class="lbl">足迹</span></button>
+  <button data-go="contact"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/></svg></span><span class="lbl">联系</span></button>
+  <button data-go="ai"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></span><span class="lbl">AI 分身</span></button>
+  <button data-go="duck"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/></svg></span><span class="lbl">彩蛋</span></button>
 </div>
 
 <aside class="panel" id="panel">
@@ -409,7 +424,7 @@ body.riding #labels{opacity:0}
   <div class="foot-note" id="pFoot">潘佳丽 · 3D 个人小岛 · 拖拽可继续环视</div>
 </aside>
 
-<div id="ride"><span>🦆 正在骑大黄鸭环岛…</span><button id="rideStop">下岛 ESC</button></div>
+<div id="ride"><span>🐥 骑上小鸭，一站一站看</span><button id="rideStop">下岛 ESC</button></div>
 
 <div id="loader">
   <div class="load-inner">
@@ -471,7 +486,7 @@ const CFG = {
       points: [
         "用 Excel / SQL 整合资金流水，做一致性校验",
         "构建用户层级模型，设计异常监控报表",
-        "输出分层运营建议，把结论交回业务"
+        "输出调查名单与分层运营建议，把结论交回业务"
       ],
       takeaway: "我能做分析，但不想只交结论——更愿意把业务问题翻译成指标，把指标做成工具，把工具推进流程。"
     },
@@ -488,7 +503,8 @@ const CFG = {
       org: "长沙聚簇云", role: "数据行政", time: "2025.02 — 2025.05",
       points: [
         "汇总 Timesheet、Task、LiveChat 多源数据，完成清洗与异常检测",
-        "输出考勤、工时、任务完成率报表与操作文档"
+        "输出考勤、工时、任务完成率报表与操作文档",
+        "梳理「采集—清洗—报表」全流程，沉淀标准化操作文档"
       ],
       takeaway: "干净，不等于有用。"
     }
@@ -501,7 +517,8 @@ const CFG = {
     { org: "校自管会", role: "副主席（活动部主任）" },
     { org: "信管 2402 班", role: "辅导员助理" },
     { org: "智慧星教育实践团", role: "宣传负责人" },
-    { org: "长沙市青年志愿者联合会", role: "学生办公室主任" }
+    { org: "长沙市青年志愿者联合会", role: "学生办公室主任" },
+    { org: "长沙市岳麓区青年志愿者联合会", role: "活动助理 · 2022.12 — 2024.12 ｜ 招募管理志愿者 1000+（同比 +150%）、组织志愿活动 50+ 场" }
   ],
 
   // —— 荣誉 ——
@@ -515,7 +532,8 @@ const CFG = {
     { t: "「睿抗 RAICOM」智慧零售竞赛 湖南赛区三等奖", d: "2023", lv: "省级" },
     { t: "校级奖学金 · 三好学生（连续四年）", d: "2022 — 2024", lv: "校级" },
     { t: "数学建模大赛 校二等奖 · 三下乡课题 二等奖", d: "校级", lv: "校级" },
-    { t: "优秀学生干部 / 优秀学生助辅 / 优秀团员", d: "校级", lv: "校级" }
+    { t: "优秀学生干部 / 优秀学生助辅 / 优秀团员", d: "校级", lv: "校级" },
+    { t: "数智化人才技术训练营（高级）小组负责人", d: "2024 · 项目成果第二名", lv: "校级" }
   ],
 
   // —— 作品 ——
@@ -540,6 +558,12 @@ const CFG = {
       tags: ["数据治理", "SQL", "用户分层"]
     },
     {
+      title: "淘宝购物行为 · 转化漏斗分析",
+      sub: "个人项目 · 2025.06 — 07",
+      desc: "对淘宝用户购物行为数据做清洗与特征工程，梳理「曝光—点击—加购—支付」全流程，构建多维转化漏斗定位大促流失节点，并对比日常与大促的 ARPU、复购差异，提出限时提醒与支付简化等优化方向。",
+      tags: ["漏斗分析", "特征工程", "运营策略"]
+    },
+    {
       title: "基于 3D-Unet 的海马体自动分割",
       sub: "本科毕业设计 · 医学影像 AI",
       desc: "面向阿尔茨海默病辅助诊断，完成 3D-Unet 海马体自动化分割研究，结合 Kaggle 实践沉淀深度学习与数据处理经验。",
@@ -560,7 +584,7 @@ const CFG = {
     }
   ],
 
-  skills: ["SQL", "Python", "Excel / SPSS / R", "Dataphin", "ABI", "PRD & 原型", "埋点与指标体系", "Agent / 提示词工程"],
+  skills: ["SQL（多表关联 / 复杂查询）", "Python（pandas / numpy）", "Excel（VLOOKUP / 透视表）", "SPSS / R", "Dataphin", "ABI", "PRD & 原型", "埋点与指标体系", "Agent / 提示词工程"],
 
   // —— 爱好 ——
   hobbies: [
@@ -758,27 +782,76 @@ const woodDark = M(0xb0805a);
 const creamMat = M(0xf8e6cd);
 const roofMat = M(0xdd7a5a);
 
-box(4.6, 0.22, 3.8, woodDark, 0, 0.11, 0, hut);              // 地板
+const stoneMat = M(0xd9d3c6, { roughness: .95 });
+box(4.86, 0.2, 4.02, stoneMat, 0, 0.1, 0, hut);               // 石砌基座
+box(4.6, 0.22, 3.8, woodDark, 0, 0.21, 0, hut);               // 地板
+// 四角木柱
+[[-2.0, -1.65], [2.0, -1.65], [-2.0, 1.65], [2.0, 1.65]].forEach(([cx, cz]) => {
+  box(0.17, 2.42, 0.17, woodDark, cx, 1.32, cz, hut);
+});
 box(0.2, 2.5, 3.6, creamMat, -2.1, 1.35, 0, hut);            // 左墙
 box(0.2, 2.5, 3.6, creamMat, 2.1, 1.35, 0, hut);             // 右墙
 box(4.2, 2.5, 0.18, creamMat, 0, 1.35, -1.75, hut);          // 后墙
 // 正面墙（带大窗洞）
 box(0.62, 2.5, 0.18, creamMat, -1.79, 1.35, 1.72, hut);
 box(0.62, 2.5, 0.18, creamMat, 1.79, 1.35, 1.72, hut);
-box(3.0, 0.34, 0.18, creamMat, 0, 2.33, 1.72, hut);
 box(3.0, 0.72, 0.18, creamMat, 0, 0.36, 1.72, hut);
+box(3.16, 0.12, 0.16, woodDark, 0, 2.7, 1.86, hut);            // 门楣横梁
+
 // 窗框
 box(3.1, 0.07, 0.24, woodDark, 0, 2.16, 1.72, hut);
 box(3.1, 0.07, 0.24, woodDark, 0, 0.75, 1.72, hut);
 box(0.07, 1.45, 0.24, woodDark, -1.5, 1.45, 1.72, hut);
 box(0.07, 1.45, 0.24, woodDark, 1.5, 1.45, 1.72, hut);
-// 屋顶
-const roof = new THREE.Mesh(new THREE.ConeGeometry(2.62, 1.3, 4), roofMat);
-roof.rotation.y = Math.PI / 4; roof.position.set(0, 3.15, 0);
-roof.castShadow = true; hut.add(roof);
-box(4.7, 0.12, 0.14, M(0x8e4f3b), 0, 2.55, 1.82, hut);
+box(0.06, 1.42, 0.16, woodDark, -0.5, 1.45, 1.72, hut);        // 竖棂
+box(0.06, 1.42, 0.16, woodDark, 0.5, 1.45, 1.72, hut);
+// 屋顶：双坡 + 瓦片
+const shingleTex = makeTex(128, 128, (g, w, h) => {
+  g.fillStyle = '#dc7a5b'; g.fillRect(0, 0, w, h);
+  for (let row = 0; row < 8; row++) {
+    const y = row * 16;
+    for (let col = 0; col < 8; col++) {
+      const x = col * 16 + (row % 2 ? 8 : 0);
+      g.fillStyle = row % 2 ? '#d06f50' : '#e08969';
+      g.beginPath(); g.moveTo(x, y + 15); g.lineTo(x + 8, y + 3); g.lineTo(x + 16, y + 15); g.closePath(); g.fill();
+    }
+    g.strokeStyle = 'rgba(140,70,48,.35)'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, y + 15.5); g.lineTo(w, y + 15.5); g.stroke();
+  }
+});
+shingleTex.wrapS = shingleTex.wrapT = THREE.RepeatWrapping; shingleTex.repeat.set(3, 2.2);
+const shingleMat = new THREE.MeshStandardMaterial({ map: shingleTex, roughness: .88, metalness: .02 });
+const roofSlope = 0.487, slabLen = 3.0, slabDepth = 4.32;
+[-1, 1].forEach(sx => {
+  const slab = box(slabLen, 0.13, slabDepth, shingleMat, sx * 1.28, 3.22, 0, hut);
+  slab.rotation.z = -sx * roofSlope;
+  slab.castShadow = true;
+  // 檐口木条
+  const fascia = box(0.1, 0.16, slabDepth + 0.04, woodDark, sx * 2.52, 2.53, 0, hut);
+  fascia.rotation.z = -sx * roofSlope;
+});
+box(0.2, 0.14, slabDepth + 0.1, M(0xa9583f), 0, 3.9, 0, hut);   // 屋脊
+// 山墙（前后三角）
+[-1, 1].forEach(sz => {
+  const shp = new THREE.Shape();
+  shp.moveTo(-2.1, 0); shp.lineTo(2.1, 0); shp.lineTo(0, 1.38); shp.closePath();
+  const geo = new THREE.ExtrudeGeometry(shp, { depth: 0.14, bevelEnabled: false });
+  const gm = new THREE.Mesh(geo, creamMat);
+  gm.position.set(0, 2.5, sz * 1.7 - (sz > 0 ? 0 : 0.14)); gm.castShadow = true; hut.add(gm);
+});
+// 山墙圆窗
+
+// 檐下立柱
 box(0.14, 2.5, 0.14, woodDark, -1.55, 1.3, 1.82, hut);
 box(0.14, 2.5, 0.14, woodDark, 1.55, 1.3, 1.82, hut);
+
+// 窗台花箱
+box(3.2, 0.09, 0.3, woodMat, 0, 0.79, 1.9, hut);
+box(1.35, 0.2, 0.24, M(0xb9805a), -0.95, 0.68, 1.95, hut);
+box(1.35, 0.2, 0.24, M(0xb9805a), 0.95, 0.68, 1.95, hut);
+[[-1.35, 0xffc2d1], [-0.95, 0xffffff], [-0.62, 0xffd7a3], [0.65, 0xffc2d1], [1.0, 0xffffff], [1.3, 0xffd7a3]].forEach(([fx, fc]) => {
+  const st = cyl(0.012, 0.012, 0.16, 5, M(0x5da36f), fx, 0.83, 1.95, hut);
+  sphere(0.055, M(fc, { emissive: fc, emissiveIntensity: .18 }), fx, 0.92, 1.95, hut, 8);
+});
 
 // 内部：桌子、显示器、椅子、台灯
 const desk = box(1.9, 0.09, 0.9, woodMat, 0, 0.86, -1.15, hut);
@@ -831,9 +904,9 @@ lampLight.position.set(1.4, 1.95, -0.4); hut.add(lampLight);
 
 // 串灯
 for (let i = 0; i <= 8; i++) {
-  const x = -1.75 + i * 0.44;
-  const y = 2.28 - Math.sin(i / 8 * Math.PI) * 0.2;
-  const b = sphere(0.05, M(0xffd9a0, { emissive: 0xffb45e, emissiveIntensity: 0.85 }), x, y, 1.84, hut, 8);
+  const x = -1.9 + i * 0.475;
+  const y = 2.62 - Math.sin(i / 8 * Math.PI) * 0.16;
+  const b = sphere(0.045, M(0xffd9a0, { emissive: 0xffb45e, emissiveIntensity: 0.85 }), x, y, 2.02, hut, 8);
   b.castShadow = false;
 }
 const stringLight = new THREE.PointLight(0xffc98a, 0.55, 6, 2);
@@ -858,8 +931,10 @@ const signTex = makeTex(640, 220, (g, w, h) => {
   g.fillStyle = '#b08b62'; g.font = '20px sans-serif';
   g.fillText('让数据资产真正驱动业务', w / 2, 186);
 });
-const signBoard = new THREE.Mesh(new THREE.PlaneGeometry(1.95, 0.62), new THREE.MeshStandardMaterial({ map: signTex, roughness: .9 }));
-signBoard.position.set(0, 2.88, 1.7); hut.add(signBoard);
+const signBoard = new THREE.Mesh(new THREE.PlaneGeometry(1.52, 0.46), new THREE.MeshStandardMaterial({ map: signTex, roughness: .9 }));
+signBoard.position.set(0, 2.99, 1.9); hut.add(signBoard);
+box(1.58, 0.04, 0.05, woodDark, 0, 3.23, 1.9, hut);
+box(1.58, 0.04, 0.05, woodDark, 0, 2.75, 1.9, hut);
 signBoard.userData.noPick = false;
 
 /* --- 经历：书架 --- */
@@ -1161,17 +1236,55 @@ const duck = new THREE.Group();
 const duckPos = new THREE.Vector3(pondC.x, 0.22, pondC.y);
 duck.position.copy(duckPos);
 world.add(duck);
-const duckMat = M(0xffd633, { roughness: .55 });
-sphere(0.42, duckMat, 0, 0.1, 0, duck);
-sphere(0.3, duckMat, 0, 0.62, 0.12, duck);
-sphere(0.13, duckMat, 0.3, 0.72, 0.09, duck);
-box(0.3, 0.12, 0.22, M(0xf6893c), 0.52, 0.68, 0.1, duck);
-sphere(0.045, M(0x25292f), 0.24, 0.82, 0.24, duck, 8);
-const duckTail = cyl(0.16, 0.02, 0.3, 8, duckMat, -0.34, 0.3, -0.06, duck);
-duckTail.rotation.z = 0.9;
-// 小皇冠
-const crown = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.16, 5), M(0xffb020));
-crown.position.set(0.28, 0.9, 0.09); duck.add(crown);
+const duckMat = M(0xffd83a, { roughness: .48, flatShading: false });
+const duckBelly = M(0xfff3c8, { roughness: .6, flatShading: false });
+const beakMat = M(0xff9c3c, { roughness: .38, flatShading: false });
+const duckEyeMat = M(0x212a36, { roughness: .18, flatShading: false });
+const blushMat = M(0xff9fb2, { roughness: .7, flatShading: false });
+
+// 身体：横向椭球，前面略收
+const dBody = sphere(0.44, duckMat, 0, 0.18, 0, duck, 24);
+dBody.scale.set(1.0, 0.94, 1.2);
+const dBelly = sphere(0.34, duckBelly, 0, 0.11, 0.13, duck, 22);
+dBelly.scale.set(0.9, 0.82, 0.92);
+// 尾巴翘起
+const dTail = sphere(0.15, duckMat, 0, 0.3, -0.48, duck, 16);
+dTail.scale.set(0.72, 0.9, 1.15); dTail.rotation.x = -0.5;
+// 脑袋
+const dHead = sphere(0.31, duckMat, 0, 0.80, 0.15, duck, 24);
+// 腮红
+[-1, 1].forEach(sx => {
+  const b = sphere(0.062, blushMat, sx * 0.15, 0.73, 0.34, duck, 12);
+  b.scale.set(1, 0.72, 0.35);
+});
+// 嘴巴：扁椭球 + 一点上翘
+const dBeak = sphere(0.125, beakMat, 0, 0.735, 0.42, duck, 18);
+dBeak.scale.set(1.05, 0.52, 1.1);
+const dBeakTip = sphere(0.055, M(0xffb25a, { flatShading: false }), 0, 0.725, 0.52, duck, 12);
+dBeakTip.scale.set(1.0, 0.4, 0.8);
+// 眼睛 + 高光
+[-1, 1].forEach(sx => {
+  const e = sphere(0.052, duckEyeMat, sx * 0.122, 0.858, 0.352, duck, 14);
+  e.scale.set(1, 1.05, 0.95);
+  sphere(0.014, M(0xffffff, { flatShading: false, emissive: 0xffffff, emissiveIntensity: .5 }), sx * 0.104, 0.873, 0.392, duck, 8);
+});
+// 翅膀：贴在身侧的小椭球，带一点外翻
+[-1, 1].forEach(sx => {
+  const w = sphere(0.24, duckMat, sx * 0.39, 0.2, -0.02, duck, 18);
+  w.scale.set(0.34, 0.72, 0.95); w.rotation.z = sx * -0.24; w.rotation.y = sx * 0.18;
+  const tip = sphere(0.1, duckMat, sx * 0.42, 0.1, -0.12, duck, 14);
+  tip.scale.set(0.3, 0.5, 0.8);
+});
+// 头顶小皇冠（三瓣）
+const crownMat = M(0xffc24a, { roughness: .35, metalness: .35, flatShading: false });
+const crownG = new THREE.Group(); crownG.position.set(0, 1.09, 0.13); duck.add(crownG);
+cyl(0.115, 0.125, 0.075, 12, crownMat, 0, 0, 0, crownG);
+for (let i = 0; i < 3; i++) {
+  const a = i * Math.PI * 2 / 3 + Math.PI / 2;
+  const c = new THREE.Mesh(new THREE.ConeGeometry(0.042, 0.115, 6), crownMat);
+  c.position.set(Math.cos(a) * 0.085, 0.1, Math.sin(a) * 0.085); c.castShadow = true; crownG.add(c);
+}
+
 
 /* --- 树 & 石头 & 花 --- */
 function tree(x, z, s = 1, c = 0x4fae7a) {
@@ -1278,8 +1391,9 @@ box(1.15, 0.28, 0.06, woodMat, 0, 0.66, -0.16, pondBench);
 for (const [dx, dz] of [[-.46, -.14], [.46, -.14], [-.46, .14], [.46, .14]]) box(0.07, 0.42, 0.07, woodDark, dx, 0.21, dz, pondBench);
 
 /* 屋顶：屋脊 + 烟囱 + 小雨檐 */
-const chimney = box(0.34, 0.72, 0.34, M(0xc8a58c), 1.15, 3.55, -0.55, hut);
-box(0.4, 0.07, 0.4, M(0x8e6a55), 1.15, 3.93, -0.55, hut);
+const chimney = box(0.34, 0.9, 0.34, M(0xc8a58c), 1.15, 3.42, -0.55, hut);
+box(0.42, 0.08, 0.42, M(0x8e6a55), 1.15, 3.9, -0.55, hut);
+box(0.36, 0.1, 0.36, M(0x6f6a63), 1.15, 3.97, -0.55, hut);
 
 /* 工作室侧墙的小窗 */
 [[-2.11, -0.65], [2.11, 0.45]].forEach(([wx, wz]) => {
@@ -1690,6 +1804,7 @@ const RENDER = {
         <span class="badge red">${CFG.politics}</span>
         <span class="badge">数据库系统工程师（软考中级）</span>
         <span class="badge">CET-6</span>
+        <span class="badge">计算机二级（MS Office）</span>
       </div>
       <div class="card" style="margin-top:14px">
         <p style="margin-top:0">“${CFG.tagline}。”<br />
@@ -1708,9 +1823,9 @@ const RENDER = {
       </div>
       <div class="card">
         <h3>湖南工商大学 · 本科</h3>
-        <div class="meta">2022 — 2026 ｜ 大数据管理与应用</div>
+        <div class="meta">2022.09 — 2026.07 ｜ 大数据管理与应用 ｜ GPA 3.506/4（专业 12/239）</div>
         <p>毕业设计：基于 3D-Unet 的阿尔茨海默病海马体自动化分割研究（人工智能 / Kaggle）。<br />
-        核心课程：管理运筹学 100 · 大数据统计与计量分析方法 99 · 数据库原理 94 · Python 92 · 数学建模与 MATLAB 91 · 大数据处理与可视化技术 90。</p>
+        核心课程：管理运筹学 100 · 大数据统计与计量分析方法 99 · 数据库原理 94 · Python 92 · 宏观经济学 92 · 数学建模与 MATLAB 91 · 大数据处理与可视化 90 · 数据质量与大数据治理 87。</p>
       </div>
       <div class="sec-title">关键词</div>
       <div class="chips">${CFG.keywords.map(k => `<span class="chip blue">${k}</span>`).join('')}</div>
@@ -1724,7 +1839,7 @@ const RENDER = {
         <button data-tab="school">学生工作 · 6</button>
         <button data-tab="honor">荣誉 · 15+</button>
       </div>
-      <div class="tabpane on" id="tab-intern">
+      <div class="tabpane on g2" id="tab-intern">
         ${CFG.internships.map(i => `
           <div class="card">
             <h3>${i.org} · ${i.role}</h3>
@@ -1733,8 +1848,8 @@ const RENDER = {
             <div class="quote">${i.takeaway}</div>
           </div>`).join('')}
       </div>
-      <div class="tabpane" id="tab-school">
-        <div class="card">
+      <div class="tabpane g2" id="tab-school">
+        <div class="card wide">
           <h3>六段学生工作，练的是「把人凑到一起」</h3>
           <p>从班级到校自管会，再到市级志愿者组织，做过执行也做过统筹。</p>
         </div>
@@ -1745,11 +1860,13 @@ const RENDER = {
           <figure><img class="zoom" src="${IMG.cert}" alt="国赛一等奖证书" loading="lazy"><figcaption>数据要素素质大赛 · 国赛一等奖</figcaption></figure>
           <figure><img class="zoom" src="${IMG.honors}" alt="荣誉墙" loading="lazy"><figcaption>15+ 项荣誉 · 证书墙</figcaption></figure>
         </div>
+        <div class="cardgrid">
         ${CFG.honors.map(h => `
           <div class="card">
             <h3>${h.t}</h3>
             <div class="meta">${h.lv} ｜ ${h.d}</div>
           </div>`).join('')}
+        </div>
         <div class="dashed">个人累计获奖 15 项余，其中省级及以上荣誉 7 项。</div>
       </div>
     `;
@@ -1766,6 +1883,7 @@ const RENDER = {
 
   works() {
     pBody.innerHTML = `
+      <div class="cardgrid">
       ${CFG.works.map((w, i) => `
         <div class="card work">
           ${w.cover ? `<div class="cover"><img class="zoom" src="${w.cover}" alt="${w.title}" loading="lazy"><span class="no">0${i + 1}</span></div>` : `<span class="no">0${i + 1}</span>`}
@@ -1775,6 +1893,7 @@ const RENDER = {
           <div class="tagline">${w.tags.map(t => `<span class="chip">${t}</span>`).join('')}</div>
           ${!w.cover && (w.title.includes('公开课') || w.title.includes('BI')) ? `<div class="mini-bars">${[38, 54, 30, 62, 47, 58].map(h => `<i style="height:${h}%"></i>`).join('')}</div>` : ''}
         </div>`).join('')}
+      </div>
       <div class="sec-title">物料 / 过程</div>
       <div class="strip">
         <figure><img class="zoom" src="${IMG.course1}" alt="数据分析课程封面" loading="lazy"><figcaption>数据分析课程封面 · 从 0 到 1</figcaption></figure>
@@ -2188,25 +2307,30 @@ function reply(q) {
 function escapeHtml(s) { return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function resetChatState() { chatStarted = false; }
 
-/* --- 骑鸭彩蛋：鸭子带你一站一站逛岛 --- */
-let riding = false, rideT = 0, rideI = 0, rideMove = 0, rideDwell = 0, ridePhase = 'move';
+/* --- 骑鸭：鸭子带着你一站一站逛岛，每到一站自动展开内容 --- */
+let riding = false, rideI = 0, ridePhase = 'move', rideT = 0, rideDur = 2;
+const rideFrom = new THREE.Vector3(), rideTo = new THREE.Vector3();
 const RIDE_STOPS = [
-  { n: '工作室 · 关于我', x: 0.2, z: 1.0, theta: 0.40, phi: 0.98, r: 11.5, ty: 1.9 },
-  { n: '书架 · 经历', x: -3.9, z: 0.3, theta: 0.92, phi: 0.98, r: 7.6, ty: 1.7 },
-  { n: '照片墙 · 足迹', x: -4.6, z: 2.3, theta: -0.18, phi: 1.00, r: 7.4, ty: 1.5 },
-  { n: '水塘 · 大黄鸭的老家', x: -2.85, z: 3.95, theta: 0.22, phi: 1.06, r: 7.2, ty: 1.0 },
-  { n: '邮筒 · 联系方式', x: 1.85, z: 5.05, theta: 0.34, phi: 1.02, r: 6.6, ty: 1.2 },
-  { n: '展示板 · 作品', x: 3.35, z: 1.15, theta: 1.52, phi: 1.00, r: 7.6, ty: 1.5 },
-  { n: '象棋桌 · 爱好', x: 2.45, z: 2.6, theta: 0.72, phi: 1.02, r: 7.2, ty: 1.1 },
-  { n: '三脚架 · 摄影', x: 4.2, z: 3.45, theta: 1.06, phi: 1.02, r: 6.8, ty: 1.4 },
-  { n: '小山 · 爬山', x: 5.3, z: 2.7, theta: 1.9, phi: 1.02, r: 8.6, ty: 1.2 }
+  { id: 'about',      n: '工作室 · 关于我',    x: 0.2,  z: 1.3,  ty: 2.0, cx: 5.6,  cy: 3.4, cz: 8.6 },
+  { id: 'experience', n: '书架 · 经历',       x: -3.9, z: 0.5,  ty: 1.8, cx: -1.0, cy: 3.2, cz: 8.2 },
+  { id: 'footprints', n: '照片墙 · 足迹',     x: -4.8, z: 2.4,  ty: 1.6, cx: -1.2, cy: 3.0, cz: 8.0 },
+  { id: 'contact',    n: '邮筒 · 联系方式',   x: 1.85, z: 5.05, ty: 1.4, cx: -1.0, cy: 3.2, cz: 9.6 },
+  { id: 'works',      n: '展示板 · 作品',     x: 3.35, z: 1.2,  ty: 1.6, cx: -0.6, cy: 3.2, cz: 7.6 },
+  { id: 'hobbies',    n: '象棋桌 · 爱好',     x: 2.45, z: 2.6,  ty: 1.2, cx: -2.2, cy: 4.2, cz: 8.2 }
 ];
-const RIDE_MOVE_T = 3.1, RIDE_DWELL_T = 2.1;
+const RIDE_DWELL = 6.2, RIDE_SPEED = 2.4;
 const easeIO = u => u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
 const rideEl = document.getElementById('ride');
 const rideText = rideEl ? rideEl.querySelector('span') : null;
+function rideTarget(i) {
+  const st = RIDE_STOPS[i];
+  return new THREE.Vector3(st.x, 1.55, st.z);
+}
 function startRide() {
-  riding = true; rideT = 0; rideI = 0; rideMove = 0; rideDwell = 0; ridePhase = 'move';
+  riding = true; rideI = 0; ridePhase = 'move'; rideT = 0;
+  rideFrom.set(duck.position.x, duck.position.y, duck.position.z);
+  rideTo.copy(rideTarget(0));
+  rideDur = Math.max(1.5, rideFrom.distanceTo(rideTo) / RIDE_SPEED);
   quack();
   rideEl.classList.add('on'); document.body.classList.add('riding');
   hotspots.forEach(h => h.el.classList.remove('on'));
@@ -2219,6 +2343,7 @@ function endRide() {
   duck.position.set(duckPos.x, duckPos.y, duckPos.z);
   duck.rotation.set(0, 0, 0);
   duck.scale.setScalar(1);
+  closePanel();
   want.theta = 0.55; want.phi = 0.96; want.r = 20.5;
   lookWant.set(0, 2.35, 0);
 }
@@ -2233,32 +2358,48 @@ function updateCamera(dt) {
   avatar.userData.bubble.visible = !riding;
   if (riding) {
     rideT += dt;
-    const a = 0.9 + rideT * 0.115;          // 绕岛的角速度
-    const R0 = 5.6;
-    const dx = -Math.sin(a), dz = -Math.cos(a);   // 前进方向（切向）
-    duck.position.set(Math.cos(a) * R0, 2.25 + Math.sin(rideT * 2.1) * 0.1, Math.sin(a) * R0);
-    duck.rotation.y = Math.atan2(dx, dz);
-    duck.rotation.z = Math.sin(rideT * 1.5) * 0.05;
-    if (duck.scale.x > 0.71) duck.scale.setScalar(0.7);
-    // 镜头在鸭子侧后方，往前看（鸭子偏左下，不挡岛）
-    const ahead = 1.8, lx2 = -dz, lz2 = dx;
-    camPos.set(
-      duck.position.x - dx * 7.6 + lx2 * 2.3,
-      duck.position.y + 4.5,
-      duck.position.z - dz * 7.6 + lz2 * 2.3
-    );
-    camera.position.lerp(camPos, 1 - Math.pow(0.0015, dt));
-    lookWant.set(duck.position.x + dx * ahead, 1.5, duck.position.z + dz * ahead);
-    look.lerp(lookWant, 1 - Math.pow(0.0015, dt));
-    camera.lookAt(look);
-    if (rideText) {
-      let near = null, nd = 99;
-      RIDE_STOPS.forEach(st => {
-        const d = Math.hypot(duck.position.x - st.x, duck.position.z - st.z);
-        if (d < nd) { nd = d; near = st; }
-      });
-      rideText.textContent = nd < 2.1 ? `🦆 经过 · ${near.n}` : '🦆 鸭子带着你环岛飞一圈';
+    const st = RIDE_STOPS[rideI];
+    if (ridePhase === 'move') {
+      const u = Math.min(1, rideT / rideDur), e = easeIO(u);
+      duck.position.x = rideFrom.x + (rideTo.x - rideFrom.x) * e;
+      duck.position.z = rideFrom.z + (rideTo.z - rideFrom.z) * e;
+      duck.position.y = 1.55 + Math.sin(Math.PI * u) * 1.2;
+      const ang = Math.atan2(rideTo.x - rideFrom.x, rideTo.z - rideFrom.z);
+      duck.rotation.y += (ang - duck.rotation.y) * (1 - Math.pow(0.02, dt));
+      duck.rotation.z = Math.sin(rideT * 6) * 0.05;
+      if (duck.scale.x > 0.73) duck.scale.setScalar(0.72);
+      camPos.set(duck.position.x - Math.sin(ang) * 6.4, 3.4, duck.position.z - Math.cos(ang) * 6.4);
+      lookWant.set(duck.position.x + Math.sin(ang) * 1.4, 1.55, duck.position.z + Math.cos(ang) * 1.4);
+      if (rideText) rideText.textContent = `第 ${rideI + 1} / ${RIDE_STOPS.length} 站 · 前往 ${st.n}`;
+      if (u >= 1) { ridePhase = 'dwell'; rideT = 0; openPanel(st.id, false); }
+    } else {
+      camPos.set(st.cx, st.cy, st.cz);
+      const fwd = new THREE.Vector3(st.x, st.ty, st.z).sub(camPos).normalize();
+      const rt = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
+      // 小鸭停在物件左前方，缩小，不挡主体
+      const parkX = st.x - rt.x * 0.45, parkZ = st.z - rt.z * 0.45;
+      duck.position.x += (parkX - duck.position.x) * (1 - Math.pow(0.06, dt));
+      duck.position.z += (parkZ - duck.position.z) * (1 - Math.pow(0.06, dt));
+      duck.position.y += (st.ty + 1.85 + Math.sin(rideT * 2.2) * 0.12 - duck.position.y) * (1 - Math.pow(0.06, dt));
+      duck.rotation.y = Math.sin(rideT * 0.9) * 0.35;
+      duck.scale.x += (0.58 - duck.scale.x) * (1 - Math.pow(0.08, dt));
+      duck.scale.y = duck.scale.z = duck.scale.x;
+      // 镜头目标右移，让物件落在左侧可见区（右侧是面板）
+      lookWant.set(st.x, st.ty, st.z).addScaledVector(rt, 2.4);
+      if (rideText) rideText.textContent = `第 ${rideI + 1} / ${RIDE_STOPS.length} 站 · ${st.n} · 正在展开`;
+      if (rideT >= RIDE_DWELL) {
+        closePanel();
+        rideI++;
+        if (rideI >= RIDE_STOPS.length) { endRide(); return; }
+        rideFrom.set(duck.position.x, duck.position.y, duck.position.z);
+        rideTo.copy(rideTarget(rideI));
+        rideDur = Math.max(1.5, rideFrom.distanceTo(rideTo) / RIDE_SPEED);
+        ridePhase = 'move'; rideT = 0;
+      }
     }
+    camera.position.lerp(camPos, 1 - Math.pow(0.0025, dt));
+    look.lerp(lookWant, 1 - Math.pow(0.0025, dt));
+    camera.lookAt(look);
     return;
   }
   const k = 1 - Math.pow(0.0009, dt);
