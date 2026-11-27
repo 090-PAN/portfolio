@@ -170,9 +170,10 @@ body.panel-open #labels{opacity:0}
 body.riding #labels{opacity:0}
 .tag{
   position:absolute;transform:translate(-50%,-100%);
-  background:rgba(19,30,46,.82);color:#fff;font-size:11.5px;letter-spacing:.5px;
-  padding:5px 10px;border-radius:999px;white-space:nowrap;
-  box-shadow:0 6px 18px rgba(10,20,40,.2);opacity:.5;transition:opacity .2s, transform .2s, background .2s;
+  background:rgba(19,30,46,.86);color:#fff;font-size:13.5px;font-weight:500;letter-spacing:.3px;
+  padding:7px 14px;border-radius:999px;white-space:nowrap;
+  border:1px solid rgba(255,255,255,.16);
+  box-shadow:0 6px 18px rgba(10,20,40,.22);opacity:.62;transition:opacity .2s, transform .2s, background .2s;
   backdrop-filter:blur(6px);
 }
 .tag.on{opacity:1;background:#2f6bff;transform:translate(-50%,-115%) scale(1.04)}
@@ -471,7 +472,7 @@ body.clay-on #brandName{letter-spacing:.06em}
 
 <div class="hud hud-meta">
   <span>LOCAL <b id="metaClock">--:--</b></span>
-  <span>V2.11 · 单文件 3D 作品集</span>
+  <span>V2.12 · 单文件 3D 作品集</span>
 </div>
 
 <div class="hud hint">拖拽旋转 · 滚轮缩放 · 点击小岛上的物件进入模块</div>
@@ -831,16 +832,37 @@ const grassSideMat = M(0x5aa463);
 const rockMat = M(0xbe9877);
 const rockDarkMat = M(0x977057);
 
-const islandTop = new THREE.Mesh(new THREE.CylinderGeometry(7.1, 6.85, 1.6, 72), [grassSideMat, grassMat, grassMat]);
+/* 不规则海岸线：径向噪声，让轮廓不再是标准圆 */
+const isleNoise = a => 1 + 0.105 * Math.sin(3 * a + 1.2) + 0.062 * Math.sin(5 * a + 2.4) + 0.034 * Math.sin(8 * a + 0.35);
+function shapeCoast(geo, mul) {
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const x = p.getX(i), z = p.getZ(i);
+    const a = Math.atan2(z, x);
+    const f = (1 + (isleNoise(a) - 1) * mul);
+    p.setX(i, x * f); p.setZ(i, z * f);
+  }
+  p.needsUpdate = true; geo.computeVertexNormals();
+  return geo;
+}
+const islandGeo = shapeCoast(new THREE.CylinderGeometry(7.35, 7.12, 1.6, 144, 1, false), 1);
+const islandTop = new THREE.Mesh(islandGeo, [grassSideMat, grassMat, grassMat]);
 islandTop.position.y = -0.8; islandTop.receiveShadow = true; islandTop.castShadow = true;
 world.add(islandTop);
 
-const islandRock = cyl(6.85, 3.2, 4.2, 48, rockMat, 0, -3.9, 0, world);
-const islandTip = cyl(3.2, 0.35, 2.6, 32, rockDarkMat, 0, -7.3, 0, world);
+/* 沙滩裙边：比草地略外扩、略下沉，形成一圈浅沙色岸线 */
+const sandMat = M(0xe8d7b4, { roughness: 0.96 });
+const sandGeo = shapeCoast(new THREE.CylinderGeometry(7.52, 7.38, 0.36, 144, 1, false), 0.98);
+const sandRing = new THREE.Mesh(sandGeo, [M(0xd9c59f), sandMat, sandMat]);
+sandRing.position.y = -0.94; sandRing.receiveShadow = true;
+world.add(sandRing);
 
-/* 草皮上的一圈深色边 */
-const rim = new THREE.Mesh(new THREE.TorusGeometry(7.05, 0.13, 8, 72), M(0x5da763));
-rim.rotation.x = -Math.PI / 2; rim.position.y = 0.01;
+const islandRock = cyl(7.15, 3.3, 4.3, 56, rockMat, 0, -3.85, 0, world);
+const islandTip = cyl(3.3, 0.3, 2.7, 32, rockDarkMat, 0, -7.3, 0, world);
+
+/* 草皮内缘：一圈更深的草色，压住草地与沙滩的交界 */
+const rim = new THREE.Mesh(new THREE.TorusGeometry(6.95, 0.1, 8, 96), M(0x5da763));
+rim.rotation.x = -Math.PI / 2; rim.position.y = 0.005;
 world.add(rim);
 
 /* 泳池 / 小水塘 */
@@ -1900,7 +1922,7 @@ const want = { theta: 0.48, phi: 0.98, r: 15.2 };
 const look = new THREE.Vector3(0, 2.35, 0);
 const lookWant = new THREE.Vector3(0, 2.35, 0);
 let playing = false;
-const R = { min: 5.2, max: 46 };
+const R = { min: 4.4, max: 46 };
 
 const pointers = new Map();
 let pinchDist = 0, dragTotal = 0, lastPointer = null;
@@ -2757,7 +2779,7 @@ function endRide() {
   duck.rotation.set(0, 0, 0);
   duck.scale.setScalar(1);
   closePanel();
-  want.theta = 0.55; want.phi = 0.96; want.r = 20.5;
+  want.theta = 0.55; want.phi = 0.95; want.r = 16.4;
   lookWant.set(0, 2.35, 0);
 }
 document.getElementById('rideStop').onclick = endRide;
@@ -2949,17 +2971,28 @@ function updateLabels() {
       live.push({ el: hs.el, x: lx, y: (-wp.y + 1) / 2 * h });
     }
   });
-  // 窄屏标签容易叠在一起，做一次简单的下推避让
-  for (let i = 0; i < live.length; i++) {
-    const a = live[i], ra = a.el.getBoundingClientRect();
-    if (!ra.width) continue;
-    for (let j = i + 1; j < live.length; j++) {
-      const b = live[j], rb = b.el.getBoundingClientRect();
-      if (!rb.width) continue;
-      if (ra.left < rb.right + 4 && rb.left < ra.right + 4 && ra.top < rb.bottom + 4 && rb.top < ra.bottom + 4) {
-        b.y += (ra.bottom - rb.top) + 6;
+  // 标签避让：先试着左右错开（幅度小、更自然），左右放不下再上下推
+  for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < live.length; i++) {
+      const a = live[i], ra = a.el.getBoundingClientRect();
+      if (!ra.width) continue;
+      for (let j = i + 1; j < live.length; j++) {
+        const b = live[j], rb = b.el.getBoundingClientRect();
+        if (!rb.width) continue;
+        const hit = ra.left < rb.right + 6 && rb.left < ra.right + 6 && ra.top < rb.bottom + 4 && rb.top < ra.bottom + 4;
+        if (!hit) continue;
+        if (pass === 0) {
+          // 右侧放得下就往右让，否则往左让
+          const right = ra.right + 10 + rb.width / 2 < w - 40;
+          const left = ra.left - 10 - rb.width / 2 > 40;
+          if (right) { b.x = ra.right + 10 + rb.width / 2; }
+          else if (left) { b.x = ra.left - 10 - rb.width / 2; }
+          else { b.y = ra.bottom + rb.height / 2 + 6; }
+        } else {
+          b.y = Math.max(b.y, ra.bottom + rb.height / 2 + 6);
+        }
+        b.el.style.left = Math.min(w - 46, Math.max(46, b.x)) + 'px';
         b.el.style.top = b.y + 'px';
-        ra.height += 0; // 首项位置不动，只推后者
       }
     }
   }
@@ -3118,11 +3151,11 @@ function applyViewport(reset) {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   if (reset) {
-    const base = portrait ? 27 : 15.2;
+    const base = portrait ? 25 : 14.4;
     want.r = view.r = base;
     want.phi = view.phi = portrait ? 1.0 : 0.98;
     want.theta = view.theta = portrait ? 0.36 : 0.48;
-    lookWant.set(portrait ? -0.1 : 0, portrait ? 1.9 : 2.35, 0);
+    lookWant.set(portrait ? -0.1 : 0, portrait ? 1.3 : 1.28, 0);
     look.copy(lookWant);
   }
   return portrait;
@@ -3131,7 +3164,7 @@ window.addEventListener('resize', () => applyViewport(false));
 
 const PORTRAIT = applyViewport(true);
 /* 首屏：2.6 秒的镜头入场，从高处绕到正面 */
-want.r = PORTRAIT ? 27 : 20.5; want.theta = 0.55; want.phi = PORTRAIT ? 1.0 : 0.96;
+want.r = PORTRAIT ? 27 : 18.2; want.theta = 0.55; want.phi = PORTRAIT ? 1.0 : 0.95;
 view.r = PORTRAIT ? 46 : 38; view.theta = -0.72; view.phi = PORTRAIT ? 0.74 : 0.68;
 const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const INTRO = { start: 0, dur: 2.6, on: !REDUCE,
