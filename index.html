@@ -471,7 +471,7 @@ body.clay-on #brandName{letter-spacing:.06em}
 
 <div class="hud hud-meta">
   <span>LOCAL <b id="metaClock">--:--</b></span>
-  <span>V2.10 · 单文件 3D 作品集</span>
+  <span>V2.11 · 单文件 3D 作品集</span>
 </div>
 
 <div class="hud hint">拖拽旋转 · 滚轮缩放 · 点击小岛上的物件进入模块</div>
@@ -1128,25 +1128,113 @@ bpLabel('2.5 m', 3.2, 1.45, 1.9, 1.35);
 bpLabel('屋面 27°', 1.5, 3.2, 2.5, 1.7);
 let bpOp = 0;
 
-/* --- 2.0 研究档案空间：半开放木构廊架 --- */
+/* 2.0 修正版：以真正的现代木构研究工作室替换旧乡村小屋视觉结构。
+   保留 hut 根节点、蓝图组和昼夜灯光引用，确保既有热点/动画逻辑继续工作。 */
+hut.remove(bp); hut.remove(lampLight); hut.remove(stringLight); hut.clear();
+const studioStone = M(0xd8d1c3, { roughness: 0.94 });
+const studioTimber = M(0x98704f, { roughness: 0.8 });
+const studioDarkTimber = M(0x5d4939, { roughness: 0.84 });
+const studioPlaster = M(0xe6e0d4, { roughness: 0.92 });
+const studioRoof = M(0x465b59, { roughness: 0.88 });
+const studioGlass = new THREE.MeshPhysicalMaterial({ color:0xa9c8cc, roughness:0.16, metalness:0.04, transparent:true, opacity:0.28, side:THREE.DoubleSide, depthWrite:false });
+// 厚重石材基座与木地板
+box(5.08,0.24,4.18,studioStone,0,0.12,0,hut);
+box(4.82,0.12,3.92,studioDarkTimber,0,0.29,0,hut);
+box(4.66,0.08,3.76,studioTimber,0,0.38,0,hut);
+// 后墙与两侧实体墙：保留室内围合感，正面保持通透
+box(4.48,2.48,0.18,studioPlaster,0,1.64,-1.78,hut);
+box(0.18,2.45,3.56,studioPlaster,-2.22,1.62,0,hut);
+box(0.18,2.45,3.56,studioPlaster,2.22,1.62,0,hut);
+// 正立面玻璃幕墙，采用分格木框与清晰入口
+box(0.18,2.42,0.18,studioTimber,-2.22,1.62,1.78,hut);
+box(0.18,2.42,0.18,studioTimber,2.22,1.62,1.78,hut);
+const studioFrontGlass = new THREE.Mesh(new THREE.PlaneGeometry(4.08,1.68),studioGlass);
+studioFrontGlass.position.set(0,1.66,1.79); hut.add(studioFrontGlass);
+// 门洞与门框：入口偏右，避免正立面成为一整块玻璃
+box(0.10,1.92,0.12,studioDarkTimber,1.30,1.40,1.86,hut);
+box(0.10,1.92,0.12,studioDarkTimber,2.02,1.40,1.86,hut);
+box(0.82,0.10,0.12,studioDarkTimber,1.66,2.36,1.86,hut);
+const studioDoor = new THREE.Mesh(new THREE.PlaneGeometry(0.60,1.78),new THREE.MeshPhysicalMaterial({color:0x6d8c8c,roughness:0.22,transparent:true,opacity:0.36,side:THREE.DoubleSide}));
+studioDoor.position.set(1.66,1.42,1.875); hut.add(studioDoor);
+// 木质立柱与横梁形成可读的结构节奏
+for(const x of [-2.12,-1.02,0.02,1.02,2.12]) box(0.10,2.34,0.12,studioTimber,x,1.60,1.82,hut);
+box(4.56,0.14,0.16,studioDarkTimber,0,2.78,1.84,hut);
+// 不对称双坡屋顶：加厚屋面、深色檐口和木质挑檐
+const roofLeft = box(2.72,0.20,4.38,studioRoof,-1.22,3.23,0,hut); roofLeft.rotation.z=0.43; roofLeft.castShadow=true;
+const roofRight = box(2.34,0.20,4.38,studioRoof,1.12,3.30,0,hut); roofRight.rotation.z=-0.50; roofRight.castShadow=true;
+box(0.16,0.18,4.46,studioDarkTimber,-2.48,2.62,0,hut);
+box(0.16,0.18,4.46,studioDarkTimber,2.42,2.64,0,hut);
+box(0.18,0.18,4.48,studioDarkTimber,0,4.02,0,hut);
+// 侧向高窗与遮阳格栅
+const studioSideGlass = new THREE.Mesh(new THREE.PlaneGeometry(2.35,0.82),studioGlass);
+studioSideGlass.rotation.y=Math.PI/2; studioSideGlass.position.set(-2.315,1.82,-0.35); hut.add(studioSideGlass);
+for(let i=0;i<6;i++) box(0.06,1.02,0.06,studioTimber,-2.34,1.82,-1.05+i*0.27,hut);
+// 室内研究桌、屏幕、书架与暖光：从外部仍可辨认空间用途
+box(1.82,0.10,0.82,studioTimber,-0.12,0.91,-0.82,hut);
+for(const x of [-0.88,0.64]) box(0.09,0.82,0.09,studioDarkTimber,x,0.48,-0.82,hut);
+box(1.42,0.84,0.08,M(0x273b43),-0.12,1.48,-1.32,hut);
+const studioDisplayTex=makeTex(512,300,(g,w,h)=>{
+  g.fillStyle='#182b30';g.fillRect(0,0,w,h);g.fillStyle='#d9e5df';g.font='bold 27px sans-serif';g.fillText('RESEARCH STUDIO',22,42);
+  g.fillStyle='#9ab8ad';g.fillRect(24,68,210,10);g.fillRect(24,91,150,8);
+  for(let i=0;i<4;i++){g.fillStyle=['#9bb8c1','#a9c39e','#d1b58e','#91aaa2'][i];g.fillRect(28+i*112,245-(i*31+65),58,i*31+65);}
+  g.fillStyle='#d5dfd9';g.font='16px sans-serif';g.fillText('AI  ·  DATA  ·  MANAGEMENT',24,282);
+});
+const studioDisplay=new THREE.Mesh(new THREE.PlaneGeometry(1.22,0.72),new THREE.MeshBasicMaterial({map:studioDisplayTex}));
+studioDisplay.position.set(-0.12,1.50,-1.265);hut.add(studioDisplay);
+// 后墙书架和暖色照明
+box(1.32,1.64,0.16,studioDarkTimber,1.45,1.18,-1.60,hut);
+for(let lv=0;lv<3;lv++){box(1.24,0.07,0.32,studioTimber,1.45,0.58+lv*0.48,-1.38,hut);for(let j=0;j<5;j++)box(0.12,0.30,0.22,M([0x9d6d56,0x728b83,0xc5a878,0x718da0,0x9b8b70][(j+lv)%5]),0.98+j*0.22,0.76+lv*0.48,-1.34,hut);}
+hut.add(lampLight); hut.add(stringLight);
+lampLight.position.set(0.82,2.12,-0.42); stringLight.position.set(0,2.45,1.35);
+hut.add(bp);
+
+
+/* --- 经历：书架 --- */
 const shelf = new THREE.Group();
-shelf.position.set(-4.25, 0, -0.85); shelf.rotation.y = 0.78;
+shelf.position.set(-4.75, 0, -0.55); shelf.rotation.y = 0.78;
 world.add(shelf);
+box(1.7, 2.3, 0.07, M(0x8c6244), 0, 1.15, -0.28, shelf);
+box(0.07, 2.3, 0.62, woodMat, -0.82, 1.15, 0, shelf);
+box(0.07, 2.3, 0.62, woodMat, 0.82, 1.15, 0, shelf);
+box(1.7, 0.08, 0.62, woodMat, 0, 2.3, 0, shelf);
+box(1.7, 0.1, 0.62, woodDark, 0, 0.05, 0, shelf);
 const bookColors = [0xef7c6f, 0xf2c14e, 0x6fa8dc, 0x84c7a1, 0xc9a3e6, 0xf39d6b, 0x7ec8e3, 0xe8b3c4];
-const archiveStone = M(0xd8d0bd, { roughness: 0.94 });
-box(2.25, 0.16, 1.72, archiveStone, 0, 0.08, 0, shelf);
-for (const [x,z] of [[-1.0,-0.72],[1.0,-0.72],[-1.0,0.72],[1.0,0.72]]) box(0.12,2.28,0.12,woodDark,x,1.22,z,shelf);
-for (let i=0;i<7;i++) box(0.1,0.1,1.62,woodMat,-0.9+i*0.3,2.36,0,shelf);
-box(1.72,1.72,0.1,woodMat,0,1.18,-0.72,shelf);
-for (let lv=0;lv<3;lv++) {
-  box(1.55,0.07,0.38,woodDark,0,0.52+lv*0.48,-0.62,shelf);
-  for(let i=0;i<7;i++) {
-    const h=0.26+((i*17+lv*11)%7)*0.025;
-    box(0.13,h,0.27,M(bookColors[(i+lv)%bookColors.length]),-0.66+i*0.22,0.58+lv*0.48+h/2,-0.62,shelf);
+for (let lv = 0; lv < 4; lv++) {
+  box(1.6, 0.05, 0.56, woodDark, 0, 0.4 + lv * 0.5, 0, shelf);
+  let x = -0.72;
+  for (let i = 0; i < 9; i++) {
+    const w = 0.08 + ((i * 37) % 7) / 100;
+    const hgt = 0.3 + ((i * 53) % 9) / 100;
+    box(w, hgt, 0.4, M(bookColors[(lv + i) % bookColors.length]), x + w / 2, 0.43 + lv * 0.5 + hgt / 2, 0.06, shelf);
+    x += w + 0.02;
+    if (x > 0.64) break;
   }
 }
-box(0.92,0.1,0.55,woodMat,0.22,0.72,0.35,shelf);
-for(const x of [-0.12,0.56]) box(0.07,0.68,0.07,woodDark,x,0.36,0.35,shelf);
+// 2.0 修正版：独立研究档案亭，完整平台、屋顶、开放书墙与阅读桌
+shelf.clear(); shelf.position.set(-4.22,0,-0.78); shelf.rotation.y=0.78;
+const archiveBaseMat=M(0xd7d0c1,{roughness:0.95});
+const archiveRoofMat=M(0x536963,{roughness:0.9});
+box(2.72,0.18,2.12,archiveBaseMat,0,0.09,0,shelf);
+box(2.52,0.10,1.92,woodDark,0,0.23,0,shelf);
+for(const [x,z] of [[-1.18,-0.88],[1.18,-0.88],[-1.18,0.88],[1.18,0.88]]) box(0.13,2.48,0.13,woodDark,x,1.48,z,shelf);
+// 轻型坡顶与檐口
+const archiveRoofA=box(1.52,0.16,2.32,archiveRoofMat,-0.66,2.78,0,shelf);archiveRoofA.rotation.z=0.18;
+const archiveRoofB=box(1.52,0.16,2.32,archiveRoofMat,0.66,2.78,0,shelf);archiveRoofB.rotation.z=-0.18;
+box(0.14,0.16,2.38,woodDark,0,3.04,0,shelf);
+// 后侧整面知识书墙，三层书架与书脊
+box(2.12,1.86,0.12,woodMat,0,1.22,-0.82,shelf);
+for(let lv=0;lv<3;lv++){
+ box(2.02,0.08,0.48,woodDark,0,0.55+lv*0.54,-0.49,shelf);
+ for(let j=0;j<11;j++){
+  const bh=0.30+((j*7+lv*3)%5)*0.035;
+  box(0.105,bh,0.28,M(bookColors[(j+lv*2)%bookColors.length]),-0.91+j*0.18,0.59+lv*0.54+bh/2,-0.46,shelf);
+ }
+}
+// 侧面研究主题板与阅读桌
+box(0.08,1.58,0.72,woodDark,-1.22,1.14,0.05,shelf);
+box(1.02,0.10,0.62,woodMat,0.42,0.76,0.42,shelf);
+for(const x of [0.02,0.82])box(0.07,0.72,0.07,woodDark,x,0.38,0.42,shelf);
+for(let i=0;i<3;i++)box(0.52,0.68,0.045,M([0x91b5c2,0xa7b99c,0xc7a077][i]),-0.76+i*0.56,1.55,0.02,shelf);
 
 /* 绿植 */
 const plant = new THREE.Group(); plant.position.set(-3.05, 0, 1.35); world.add(plant);
@@ -1164,22 +1252,46 @@ box(1.3, 0.08, 0.42, woodMat, 0, 0.42, 0, bench);
 box(1.3, 0.34, 0.07, woodMat, 0, 0.62, -0.2, bench);
 for (const dx of [-0.5, 0.5]) box(0.08, 0.4, 0.08, woodDark, dx, 0.2, 0, bench);
 
-/* --- 2.0 项目展览空间：轻型开放式展廊 --- */
+/* --- 作品：展示板 --- */
 const board = new THREE.Group();
-board.position.set(4.0, 0, 0.0); board.rotation.y = 1.54;
+board.position.set(4.25, 0, 0.15); board.rotation.y = 1.54;
 world.add(board);
-box(2.55,0.16,1.82,archiveStone,0,0.08,0,board);
-for(const [x,z] of [[-1.12,-0.78],[1.12,-0.78],[-1.12,0.78],[1.12,0.78]]) box(0.1,2.55,0.1,woodDark,x,1.34,z,board);
-for(let i=0;i<8;i++) box(0.1,0.1,1.76,woodMat,-1.1+i*0.315,2.68,0,board);
-const galleryMat = M(0xe9e2d5,{roughness:0.88});
-box(2.24,0.12,1.78,galleryMat,0,2.55,0,board);
-const galleryPanels = [0x91b5c2,0xa7b99c,0xc7a077];
-for(let i=0;i<3;i++) {
-  box(0.66,1.18,0.065,galleryPanels[i],-0.72+i*0.72,1.48,-0.72,board);
-  const plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.78),new THREE.MeshBasicMaterial({color:[0x263b3b,0x30483f,0x3d4650][i]}));
-  plaque.position.set(-0.72+i*0.72,1.52,-0.682); board.add(plaque);
-  box(0.66,0.06,0.08,woodDark,-0.72+i*0.72,0.86,-0.69,board);
+box(0.12, 0.9, 0.12, woodDark, -0.8, 0.45, 0.1, board);
+box(0.12, 0.9, 0.12, woodDark, 0.8, 0.45, 0.1, board);
+box(2.1, 1.55, 0.1, M(0x37506b), 0, 1.55, 0, board);
+box(2.3, 1.75, 0.06, woodMat, 0, 1.55, -0.06, board);
+const posterImgs = [IMG.course1, IMG.course2, IMG.cert];
+const texLoader = new THREE.TextureLoader();
+for (let i = 0; i < 3; i++) {
+  const tex = texLoader.load(posterImgs[i]);
+  tex.encoding = THREE.sRGBEncoding;
+  const p = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.45),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: .94 }));
+  p.position.set(-0.66 + i * 0.66, 1.62, 0.09);
+  board.add(p);
+  const frame = box(0.66, 0.49, 0.012, M(0xf6f3ea), -0.66 + i * 0.66, 1.62, 0.075, board);
 }
+// 2.0 修正版：可辨识的三展位项目展廊，具有独立平台、顶棚、结构柱和展示面
+board.clear(); board.position.set(4.02,0,-0.02); board.rotation.y=1.54;
+const galleryStone=M(0xd8d0bd,{roughness:0.94});
+const galleryRoof=M(0x596c68,{roughness:0.86});
+const galleryGlass=new THREE.MeshPhysicalMaterial({color:0xa7c5c9,roughness:0.2,transparent:true,opacity:0.20,side:THREE.DoubleSide,depthWrite:false});
+box(2.92,0.18,2.18,galleryStone,0,0.09,0,board);
+box(2.72,0.10,1.98,woodDark,0,0.23,0,board);
+for(const [x,z] of [[-1.28,-0.88],[1.28,-0.88],[-1.28,0.88],[1.28,0.88]])box(0.14,2.48,0.14,woodDark,x,1.46,z,board);
+box(2.98,0.16,2.28,galleryRoof,0,2.78,0,board);
+box(2.98,0.12,0.12,woodDark,0,2.66,1.08,board);
+// 三块大型项目展板：从岛屿主视角即可辨认
+for(let i=0;i<3;i++){
+ const px=-0.88+i*0.88;
+ box(0.78,1.48,0.12,M([0x536f78,0x647d69,0x8a7055][i]),px,1.45,-0.72,board);
+ box(0.68,1.34,0.035,M([0x263b43,0x30483f,0x3d4650][i]),px,1.45,-0.645,board);
+ // 展板顶部色带与底部说明铭牌
+ box(0.60,0.10,0.045,M([0x9bb8c1,0xa7c39e,0xd1b58e][i]),px,2.02,-0.615,board);
+ box(0.72,0.16,0.08,woodMat,px,0.62,-0.65,board);
+}
+// 侧向玻璃挡风片，保持开放展廊感
+const gallerySideA=new THREE.Mesh(new THREE.PlaneGeometry(1.52,1.68),galleryGlass);gallerySideA.rotation.y=Math.PI/2;gallerySideA.position.set(-1.30,1.35,0);board.add(gallerySideA);
 
 /* --- 爱好：象棋桌 + 摄影角 + 小山 --- */
 const chess = new THREE.Group();
