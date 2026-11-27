@@ -445,6 +445,9 @@ body.clay-on #brandName{letter-spacing:.06em}
   border:1px solid rgba(120,190,255,.35);border-radius:999px;padding:8px 16px;pointer-events:none;backdrop-filter:blur(6px)}
 .pix-toast.on{opacity:1;transform:translate(-50%,0)}
 
+
+.honor-extra{grid-column:1 / -1}
+.honor-extra .cover{margin-top:4px}
 </style>
 </head>
 <body>
@@ -561,8 +564,7 @@ const CFG = {
         "AI 公开课 3.0：协助从 0 到 1 搭建，含课程内容设计、课后测试、埋点机制与数据看板",
         "Data First 订阅号：参与公司级订阅号建设，推动数据文化在内部落地",
         "Agent 运维：创建 Agent 定时任务、做提示词工程，协助数据入湖与自动化脚本测试"
-      ],
-      takeaway: "我想做的，是让数据和 AI 变成有人用的产品。"
+      ]
     },
     {
       org: "明日互联网", role: "数据分析师", time: "2025.11 — 2026.01",
@@ -570,8 +572,7 @@ const CFG = {
         "用 Excel / SQL 整合资金流水，做一致性校验",
         "构建用户层级模型，设计异常监控报表",
         "输出调查名单与分层运营建议，把结论交回业务"
-      ],
-      takeaway: "我能做分析，但不想只交结论——更愿意把业务问题翻译成指标，把指标做成工具，把工具推进流程。"
+      ]
     },
     {
       org: "安克创新", role: "数据产品运营", time: "2025.08 — 2025.09",
@@ -579,8 +580,7 @@ const CFG = {
         "课程产品：参与内部数据分析认证 MOOC 课程设计，支持用户学习路径分析与课程优化",
         "BI 看板：搭建仪表盘，设计进群转化率、报名完成率、活动参与率等核心指标，实现自动更新",
         "内容运营：负责「数据茶歇」官号文案、排版与推文，复盘 MOOC 活动数据并更新 SOP"
-      ],
-      takeaway: "看板做完，任务才到一半。"
+      ]
     },
     {
       org: "长沙聚簇云", role: "数据行政", time: "2025.02 — 2025.05",
@@ -588,8 +588,7 @@ const CFG = {
         "汇总 Timesheet、Task、LiveChat 多源数据，完成清洗与异常检测",
         "输出考勤、工时、任务完成率报表与操作文档",
         "梳理「采集—清洗—报表」全流程，沉淀标准化操作文档"
-      ],
-      takeaway: "干净，不等于有用。"
+      ]
     }
   ],
 
@@ -607,12 +606,26 @@ const CFG = {
   // —— 荣誉 ——
   honors: [
     { t: "国家发明专利 2 项", d: "脑部图像分割方向 · 导师一作、本人二作 · 已授权下证", lv: "国家级" },
-    { t: "第三届全国大学生数据要素素质大赛 国家一等奖", d: "湖南赛区 · 十佳作品（2026）", lv: "国家级" },
+    { t: "第三届全国大学生数据要素素质大赛 国家一等奖", d: "湖南赛区 · 十佳作品（2026）", lv: "国家级",
+      extra: {
+        sub: "获奖作品：果境数鉴 · 智慧果园精准防控决策平台",
+        cover: IMG.orchard,
+        desc: "面向农业企业与规模化果园，针对病虫害监管效率低、防控决策依赖经验、精准施药能力不足、农业数据价值释放不足四个问题，构建「数据治理—资产加工—智能分析—决策应用」体系：多源农业数据（环境、病虫害、生产管理、空间）汇成农业数据资产，LightGBM 输出高/中/低风险等级，SHAP 与农机机理把模型结论翻译成可解释的风险诊断，再落到分区域、分时点、分用药量的精准防控，效果监测回流数据资产形成闭环。",
+        bullets: ["数据治理 → 农业数据资产：四类多源数据统一清洗与标准化", "智能预测：LightGBM 风险分级，Macro-F1 / Recall / Precision 评估", "风险解释：SHAP 归因 + 农机机理，把黑箱变成可解释诊断", "精准决策：分区域（RRI）、分时点、分用药量的多目标优化"],
+        tags: ["数据要素", "LightGBM + SHAP", "可解释决策", "闭环迭代"]
+      } },
     { t: "湖南省优秀毕业生", d: "省级荣誉", lv: "省级" },
     { t: "湖南省「2023 年度优秀河小青志愿者」", d: "省级荣誉", lv: "省级" },
     { t: "「挑战杯」创业计划竞赛 校级银奖", d: "2025", lv: "校级" },
     { t: "「学创杯」创业综合模拟赛项 省级三等奖", d: "ERP · 2023", lv: "省级" },
-    { t: "「睿抗 RAICOM」智慧零售竞赛 湖南赛区三等奖", d: "2023", lv: "省级" },
+    { t: "「睿抗 RAICOM」智慧零售竞赛 湖南赛区三等奖", d: "2023", lv: "省级",
+      extra: {
+        sub: "获奖项目：智慧零售场景的机器人操作与任务调试",
+        cover: IMG.robot,
+        desc: "在比赛现场做机械臂与移动底盘的联调：按任务要求完成抓取、搬运与路径执行，负责操作与现场排障。下面这张是当时在赛位上调 BR280 底盘与机械臂的实拍。",
+        bullets: [],
+        tags: ["机器人实训", "现场调试"]
+      } },
     { t: "校级奖学金 · 三好学生（连续四年）", d: "2022 — 2024", lv: "校级" },
     { t: "数学建模大赛 校二等奖 · 三下乡课题 二等奖", d: "校级", lv: "校级" },
     { t: "优秀学生干部 / 优秀学生助辅 / 优秀团员", d: "校级", lv: "校级" },
@@ -622,17 +635,9 @@ const CFG = {
   // —— 作品 ——
   works: [
     {
-      title: "果境数鉴 · 智慧果园精准防控决策平台",
-      cover: IMG.orchard,
-      fit: "contain",
-      sub: "第三届全国大学生数据要素素质大赛 · 国家一等奖（十佳作品）",
-      desc: "面向农业企业与规模化果园，解决病虫害监管效率低、防控依赖经验、精准施药不足、农业数据价值难释放四个问题。以数据要素为主线，串起「数据治理—资产加工—智能分析—决策应用」：多源农业数据汇成农业数据资产，LightGBM 做风险概率预测，SHAP 与农机机理把黑箱结论翻译成可解释诊断，最后落到分区域、分时点、分用药量的精准防控，并用效果监测回流数据资产，形成闭环。",
-      tags: ["数据要素", "LightGBM + SHAP", "可解释决策", "闭环迭代"]
-    },
-    {
       title: "AI 公开课 3.0",
       sub: "安克创新 · 从 0 到 1 搭建",
-      desc: "协助搭建公司级 AI 公开课：课程内容设计、课后测试、埋点机制与数据看板。数据、产品、AI 第一次在同一个项目里同时出现。",
+      desc: "协助搭建公司级 AI 公开课：课程内容设计、课后测试、埋点机制与数据看板，从需求到看板全部跑通。",
       tags: ["产品设计", "埋点机制", "数据看板"]
     },
     {
@@ -666,13 +671,6 @@ const CFG = {
       desc: "导师一作、本人二作，两项国家发明专利已授权下证，把算法研究落成可保护的技术方案。",
       tags: ["发明专利", "算法"]
     },
-    {
-      title: "数据要素素质大赛 · 国家一等奖",
-      cover: IMG.cert,
-      sub: "第三届全国大学生数据要素素质大赛",
-      desc: "湖南赛区国家一等奖（十佳作品），以真实数据要素场景完成从分析到方案的完整闭环。",
-      tags: ["国家级奖项", "十佳作品"]
-    }
   ],
 
   skills: ["SQL（多表关联 / 复杂查询）", "Python（pandas / numpy）", "Excel（VLOOKUP / 透视表）", "SPSS / R", "Dataphin", "ABI", "PRD & 原型", "埋点与指标体系", "Agent / 提示词工程"],
@@ -2105,7 +2103,6 @@ const RENDER = {
             <h3>${i.org} · ${i.role}</h3>
             <div class="meta">${i.time}</div>
             <ul>${i.points.map(p => `<li>${p}</li>`).join('')}</ul>
-            <div class="quote">${i.takeaway}</div>
           </div>`).join('')}
       </div>
       <div class="tabpane g2" id="tab-school">
@@ -2136,7 +2133,14 @@ const RENDER = {
           <div class="card">
             <h3>${h.t}</h3>
             <div class="meta">${h.lv} ｜ ${h.d}</div>
-          </div>`).join('')}
+          </div>
+          ${h.extra ? `<div class="card wide honor-extra">
+            <div class="meta" style="margin-bottom:6px">${h.extra.sub}</div>
+            <div class="cover tall"><img class="zoom" src="${h.extra.cover}" alt="果境数鉴闭环体系" loading="lazy"></div>
+            <p style="margin-top:10px">${h.extra.desc}</p>
+            <ul>${h.extra.bullets.map(x => `<li>${x}</li>`).join('')}</ul>
+            <div class="tagline">${h.extra.tags.map(t => `<span class="chip">${t}</span>`).join('')}</div>
+          </div>` : ''}`).join('')}
         </div>
         <div class="dashed">个人累计获奖 15 项余，其中省级及以上荣誉 7 项。</div>
       </div>
@@ -2168,9 +2172,7 @@ const RENDER = {
       <div class="sec-title">物料 / 过程</div>
       <div class="strip">
         <figure><img class="zoom" src="${IMG.course1}" alt="数据分析课程封面" loading="lazy"><figcaption>数据分析课程封面 · 从 0 到 1</figcaption></figure>
-        <figure><img class="zoom" src="${IMG.robot}" alt="机器人实训" loading="lazy"><figcaption>RAICOM 智慧零售赛 · 实训现场</figcaption></figure>
         <figure><img class="zoom" src="${IMG.honors}" alt="荣誉墙" loading="lazy"><figcaption>15+ 项荣誉证书一览</figcaption></figure>
-        <figure><img class="zoom" src="${IMG.trend}" alt="产业趋势" loading="lazy"><figcaption>产业趋势：数字化 → 智能化</figcaption></figure>
       </div>
       <div class="sec-title">Skills</div>
       <div class="chips">${CFG.skills.map(s => `<span class="chip blue">${s}</span>`).join('')}</div>
